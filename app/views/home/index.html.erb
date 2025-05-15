@@ -1,0 +1,27 @@
+<div class="top-wrapper">
+  <div class="top-page-logo">
+    <%= image_tag "logo.png", alt: "ロゴ" %>
+  </div>
+
+  <div class="top-page-container">
+    <h1 class="top-page-title">トップページ</h1>
+    <p class="top-page-user-info">ログイン：ユーザー　<%= current_user.user_name %></p>
+
+    <nav class="top-page-nav">
+      <% if current_user.管理者? %>
+        <%= link_to "ユーザー管理", users_path %>
+      <% end %>
+
+      <%= link_to "案件一覧", projects_path %>
+
+      <% if current_user.管理者? %>
+        <%= link_to "分析", analytics_path %>
+      <% end %>
+
+      <%= button_to "ログアウト", destroy_user_session_path,
+                    method: :delete,
+                    data: { turbo: false, confirm: "ログアウトしますか？" },
+                    class: "btn btn-outline-primary" %>
+    </nav>
+  </div>
+</div>

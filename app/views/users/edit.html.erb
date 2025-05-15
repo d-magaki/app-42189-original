@@ -1,0 +1,49 @@
+<h1 class="page-title">ユーザー編集</h1>
+
+<%= form_with model: @user, local: true do |f| %>
+  <div class="list-container">
+    <div class="table-responsive">
+      <table id="projects-table" class="table table-bordered table-striped">
+        <thead class="table-header">
+          <tr>
+            <th style="width: 30%;">項目</th>
+            <th>入力内容</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>社員ID</th>
+            <td><%= f.text_field :employee_id, class: "form-control" %></td>
+          </tr>
+          <tr>
+            <th>氏名</th>
+            <td><%= f.text_field :user_name, class: "form-control" %></td>
+          </tr>
+          <tr>
+            <th>部署</th>
+            <td>
+              <%= f.select :department, User.departments.keys.map { |k| [k, k] }, {}, class: "form-select" %>
+            </td>
+          </tr>
+          <tr>
+            <th>権限</th>
+            <td><%= f.select :role, [["一般社員", 0], ["管理者", 1]], {}, class: "form-select" %></td>
+          </tr>
+          <tr>
+            <th>Email</th>
+            <td><%= f.email_field :email, class: "form-control" %></td>
+          </tr>
+          <tr>
+            <td colspan="2" class="text-end">
+              <%= f.submit "更新", class: "btn btn-primary" %>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<div class="actions mt-3">
+  <%= link_to "ユーザー一覧へ戻る", users_path, class: "btn btn-secondary" %>
+</div>

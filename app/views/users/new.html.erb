@@ -1,0 +1,55 @@
+<div class="user-form-container">
+  <h1 class="page-title">新規ユーザー登録</h1>
+
+  <% if @user.errors.any? %>
+    <div class="alert alert-danger">
+      <h5 class="mb-2">入力内容に誤りがあります：</h5>
+      <ul class="mb-0">
+        <% @user.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @user, url: users_path, local: true do |f| %>
+    <div class="mb-3">
+      <%= f.label :employee_id, "社員ID" %>
+      <%= f.text_field :employee_id, class: "form-control" %>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :user_name, "氏名" %>
+      <%= f.text_field :user_name, class: "form-control" %>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :department, "部署" %>
+      <%= f.select :department, User.departments.keys.map { |k| [k, k] }, {}, class: "form-select" %>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :role, "権限" %>
+      <%= f.select :role, [["一般社員", 0], ["管理者", 1]], {}, class: "form-select" %>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :email, "メールアドレス" %>
+      <%= f.email_field :email, class: "form-control" %>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :password, "パスワード" %>
+      <%= f.password_field :password, class: "form-control" %>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :password_confirmation, "パスワード確認" %>
+      <%= f.password_field :password_confirmation, class: "form-control" %>
+    </div>
+
+    <div class="actions text-end">
+      <%= f.submit "登録", class: "btn btn-success" %>
+    </div>
+  <% end %>
+</div>

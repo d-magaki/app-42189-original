@@ -1,0 +1,30 @@
+<div class="login-page-wrapper">
+
+  <div class="login-logo">
+    <%= image_tag "logo.png", alt: "社内業務管理システム ロゴ" %>
+  </div>
+
+  <div class="login-form-container">
+    <h1 class="page-title text-center mb-4">ログイン</h1>
+
+    <%= form_with model: resource, as: resource_name, url: session_path(resource_name), local: true do |f| %>
+      <div class="mb-3">
+        <%= f.label :email, "メールアドレス", class: "form-label" %>
+        <%= f.email_field :email, autofocus: true, class: "form-control" %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :password, "パスワード", class: "form-label" %>
+        <%= f.password_field :password, autocomplete: "current-password", class: "form-control" %>
+      </div>
+
+      <div class="form-check mb-3">
+        <%= f.check_box :remember_me, class: "form-check-input" %>
+        <%= f.label :remember_me, "ログイン状態を保持", class: "form-check-label" %>
+      </div>
+
+      <%= f.submit "ログイン", class: "btn btn-primary w-100" %>
+    <% end %>
+  </div>
+
+</div>
