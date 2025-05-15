@@ -1,18 +1,20 @@
 Rails.application.routes.draw do
-  devise_for :users
+  # Deviseのルーティングから :registrations を除外（create衝突回避）
+  devise_for :users, skip: [:registrations]
 
-  root "home#index"
+  root "home#index" # ログイン後のトップページをルートにする
+
   get "analytics", to: "analytics#index"
+  get "home", to: "home#index"
+  get "users/find_by_employee_id", to: "users#find_by_employee_id"
 
-  resources :users
+  # 自作のUsersControllerが /users を使えるようになる
+  resources :users, only: [:index, :new, :create, :edit, :update, :destroy]
 
   resources :projects do
     collection do
       post :import
       get  :analysis
-    end
-    member do
-      delete :destroy
     end
   end
 end

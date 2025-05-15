@@ -1,22 +1,15 @@
+import Rails from "@rails/ujs";
+Rails.start();
+
 import "@hotwired/turbo-rails";
-import { Chart, registerables } from "chart.js";
-Chart.register(...registerables);
 import Split from "split.js";
 
-document.addEventListener("turbo:load", function () {
+document.addEventListener("turbo:load", () => {
   console.log("Turbo:load - ページ初期化開始");
 
-  // 案件テーブルの行クリック → 詳細へ
-  document.querySelectorAll("#projects-table tbody tr").forEach(row => {
-    row.addEventListener("dblclick", function () {
-      const url = row.dataset.url;
-      if (url) {
-        window.location.href = url;
-      }
-    });
-  });
+  const projectRows = document.querySelectorAll("#projects-table tbody tr");
 
-  // Split.js: 高さ調整
+  // 上下分割
   const list = document.querySelector(".list-container");
   const chart = document.querySelector(".chart-container");
   if (list && chart) {
@@ -26,60 +19,114 @@ document.addEventListener("turbo:load", function () {
       sizes: [60, 40],
       minSize: [20, 20],
     });
-    console.log("Split.js による高さ分割が適用されました");
   }
 
-  // 分析画面用グラフ描画
-  const salesChart = document.getElementById("employeePerformanceChart");
-  if (!salesChart) return;
+  // 社員ID → 担当者自動セット
+  const employeeInput = document.getElementById("employee-id-input");
+  if (employeeInput) {
+    employeeInput.addEventListener("change", () => {
+      const employeeId = employeeInput.value.trim();
+      if (!employeeId) return;
 
-  const configOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    aspectRatio: 1.0,
-    plugins: { legend: { display: true } },
-    scales: {
-      y: { beginAtZero: true, ticks: { font: { size: 12 } } },
-      x: { ticks: { font: { size: 12 } } }
-    }
-  };
+      fetch(`/users/find_by_employee_id?employee_id=${employeeId}`)
+        .then(response => {
+          if (!response.ok) throw new Error("User not found");
+          return response.json();
+        })
+        .then(data => {
+          ["planning", "design", "development"].forEach(key => {
+            document.getElementById(`${key}-user-id`).value = "";
+            const nameCell = document.getElementById(`${key}-user-name`);
+            if (nameCell) nameCell.textContent = "未設定";
+          });
 
-  const deliveryChart = document.getElementById("deliveryTimelineChart");
-  if (deliveryChart) {
-    console.log("納期データ：", getJSON("timeline-labels"), getJSON("timeline-values"));
-  
-    new Chart(deliveryChart.getContext("2d"), {
-      type: "bar", // 横棒でも "bar"
-      data: {
-        labels: getJSON("timeline-labels"),
-        datasets: [{
-          label: "案件数",
-          data: getJSON("timeline-values"),
-          backgroundColor: "#007bff"
-        }]
-      },
-      options: {
-        indexAxis: "y", // 横棒にするためのキモ
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true },
-          tooltip: {
-            mode: "index",
-            intersect: false
+          const roleField = document.getElementById("user-role-display");
+          if (roleField) roleField.textContent = data.role === 1 ? "管理者" : "一般社員";
+
+          const map = {
+            "企画部": "planning",
+            "情報設計部": "design",
+            "開発部": "development"
+          };
+          const key = map[data.department];
+          if (key) {
+            document.getElementById(`${key}-user-id`).value = data.id;
+            const nameCell = document.getElementById(`${key}-user-name`);
+            if (nameCell) nameCell.textContent = data.user_name || "未設定";
           }
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            title: { display: true, text: "案件数" }
-          },
-          y: {
-            ticks: { font: { size: 12 } },
-            title: { display: true, text: "納期日" }
-          }
-        }
-      }
+        })
+        .catch(error => {
+          console.error("社員情報の取得に失敗:", error);
+          ["planning", "design", "development"].forEach(key => {
+            document.getElementById(`${key}-user-id`).value = "";
+            const nameCell = document.getElementById(`${key}-user-name`);
+            if (nameCell) nameCell.textContent = "未設定";
+          });
+          const roleField = document.getElementById("user-role-display");
+          if (roleField) roleField.textContent = "";
+        });
     });
   }
+
+  // フィルター状態管理
+  let activeDepartment = null;
+  let departmentFilterIncompleteOnly = false;
+
+  function projectIsVisible(row) {
+    const dept = activeDepartment;
+    const isComplete = row.dataset.complete === "true";
+
+    if (!dept) return true;
+
+    const matchesDept =
+      (dept === "企画部" && row.dataset.planning === "true") ||
+      (dept === "情報設計部" && row.dataset.design === "true") ||
+      (dept === "開発部" && row.dataset.development === "true");
+
+    const matchesIncomplete = !departmentFilterIncompleteOnly || !isComplete;
+
+    return matchesDept && matchesIncomplete;
+  }
+
+  function applyFilters() {
+    projectRows.forEach(row => {
+      row.style.display = projectIsVisible(row) ? "" : "none";
+    });
+  }
+
+  // 社員別フィルター（全解除）
+  document.querySelectorAll(".employee-filter").forEach(row => {
+    row.addEventListener("click", () => {
+      activeDepartment = null;
+      departmentFilterIncompleteOnly = false;
+      projectRows.forEach(row => row.style.display = "");
+    });
+  });
+
+  // 部署別フィルター（未完了案件のみ）
+  document.querySelectorAll(".department-filter").forEach(row => {
+    row.addEventListener("click", () => {
+      activeDepartment = (row.dataset.department || "").trim();
+      departmentFilterIncompleteOnly = true;
+      applyFilters();
+    });
+  });
+
+  // リセットボタン
+  const resetButton = document.getElementById("reset-projects");
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      activeDepartment = null;
+      departmentFilterIncompleteOnly = false;
+      applyFilters();
+    });
+  }
+
+  // ダブルクリックで詳細画面へ遷移
+  projectRows.forEach(row => {
+    row.addEventListener("dblclick", () => {
+      const url = row.dataset.url;
+      if (url) window.location.href = url;
+    });
+  });
 });

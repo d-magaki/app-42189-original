@@ -8,7 +8,7 @@
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
-    <!--Importmap方式でJSを読み込む -->
+    <!-- Importmap方式でJSを読み込む -->
     <%= javascript_importmap_tags %>
   </head>
 
@@ -35,7 +35,7 @@
     </header>
 
     <main class="container">
-      
+      <%# flash notice を消したいなら削除、中央表示したいなら以下 %>
       <% unless (devise_controller? && action_name == "new") || (controller_name == "home" && action_name == "index") %>
         <% if notice.present? %>
           <div class="text-center text-success fw-bold mt-3"><%= notice %></div>
