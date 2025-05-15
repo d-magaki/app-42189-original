@@ -1,0 +1,39 @@
+<div class="container my-5">
+  <h1 class="page-title text-center">案件分析</h1>
+
+  <!-- 上段：横並び2つ -->
+  <div class="row gx-4 gy-4">
+    <div class="col-md-6">
+      <div class="chart-container">
+        <h2 class="h5">社員別売上</h2>
+        <canvas id="employeePerformanceChart" height="300"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="chart-container">
+        <h2 class="h5">依頼種別割合</h2>
+        <canvas id="requestTypeChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下段：1つ -->
+  <div class="row mt-5">
+    <div class="col-12">
+      <div class="chart-container">
+        <h2 class="h5">納期までの案件数</h2>
+        <canvas id="deliveryTimelineChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JSONデータをscriptタグ内に埋め込む（JS側で読み取る） -->
+<script id="sales-data-labels" type="application/json"><%= @sales_by_employee.keys.to_json.html_safe %></script>
+<script id="sales-data-values" type="application/json"><%= @sales_by_employee.values.to_json.html_safe %></script>
+
+<script id="request-labels" type="application/json"><%= @request_type_counts.keys.to_json.html_safe %></script>
+<script id="request-values" type="application/json"><%= @request_type_counts.values.to_json.html_safe %></script>
+
+<script id="timeline-labels" type="application/json"><%= @delivery_timelines.keys.to_json.html_safe %></script>
+<script id="timeline-values" type="application/json"><%= @delivery_timelines.values.to_json.html_safe %></script>

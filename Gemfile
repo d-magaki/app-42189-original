@@ -71,3 +71,5 @@ gem 'devise'
 
 gem 'roo'
 gem 'activestorage-validator'
+gem "chartkick"
+gem "groupdate"
