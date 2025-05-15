@@ -13,9 +13,8 @@ class User < ApplicationRecord
   enum role: { 一般社員: 0, 管理者: 1 }
   enum department: {
     企画部: "企画部",
-    設計部: "設計部",
-    開発部: "開発部",
-    営業部: "営業部"
+    情報設計部: "情報設計部",
+    開発部: "開発部"
   }
 
   # バリデーション
