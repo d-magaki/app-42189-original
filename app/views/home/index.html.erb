@@ -9,16 +9,16 @@
 
     <nav class="top-page-nav">
       <% if current_user.管理者? %>
-        <%= link_to "ユーザー管理", users_path %>
+        <%= link_to "ユーザー管理", users_path, class: "btn btn-outline-primary me-2" %>
       <% end %>
 
-      <%= link_to "案件一覧", projects_path %>
+      <%= link_to "案件一覧", projects_path, class: "btn btn-outline-primary me-2" %>
 
       <% if current_user.管理者? %>
-        <%= link_to "分析", analytics_path %>
+        <%= link_to "分析", analytics_path, class: "btn btn-outline-primary me-2" %>
       <% end %>
 
-      <%= link_to "ログアウト", destroy_user_session_path, method: :delete, data: { confirm: "ログアウトしますか？" } %>
+      <%= link_to "ログアウト", destroy_user_session_path, method: :delete, data: { confirm: "ログアウトしますか？" }, class: "btn btn-outline-primary me-2" %>
     </nav>
   </div>
 </div>
