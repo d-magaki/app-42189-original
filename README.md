@@ -87,66 +87,84 @@ Things you may want to cover:
 
 DB設計
 users テーブル（社員情報）
-| Column             | Type     | Options                   | 備考                       |
-|--------------------|----------|---------------------------|----------------------------|
-| id                 | integer  | primary_key               | 社員の一意識別子            | 
-| employee_id        | string   | null: false, unique: true | 社員ID（一意の識別子）       | 
-| email              | string   | null: false, unique: true | メールアドレス              | 
-| encrypted_password | string   | null: false               | パスワード（ハッシュ化）     | 
-| user_name          | string   | null: false               | 社員名                      | 
-| department         | string   | null: false               | 所属部署                    | 
-| role               | integer  | null: false, default: 0   | 権限（0:一般社員, 1:管理者） | 
-| created_at         | datetime |                           | 作成日時                    | 
-| updated_at         | datetime |                           | 更新日時                    | 
+| Column             | Type     | Options                   | 備考                                   |
+|--------------------|----------|---------------------------|----------------------------------------|
+| id                 | integer  | primary_key               | 社員の一意識別子                        |
+| employee_id        | string   | null: false, unique: true | 社員ID（一意の識別子）                  |
+| email              | string   | null: false, unique: true | メールアドレス                         |
+| encrypted_password | string   | null: false               | パスワード（ハッシュ化）                |
+| user_name          | string   | null: false               | 社員名                                 |
+| department         | string   | null: false               | 所属部署                               |
+| role               | integer  | null: false, default: 0   | 権限（0:一般社員, 1:管理者）            |
+| created_at         | datetime |                           | 作成日時                               |
+| updated_at         | datetime |                           | 更新日時                               |
 
-Association:
-- has_many :projects, foreign_key: :employee_id, dependent: :destroy
+
+モデルイメージ
+class User < ApplicationRecord
+  has_many :projects, foreign_key: :user_id, dependent: :destroy
+  has_many :planning_projects, class_name: "Project", foreign_key: :planning_user_id, dependent: :nullify
+  has_many :design_projects, class_name: "Project", foreign_key: :design_user_id, dependent: :nullify
+  has_many :development_projects, class_name: "Project", foreign_key: :development_user_id, dependent: :nullify
+
+  enum role: { 一般社員: 0, 管理者: 1 }
+end
 
 
 projects テーブル
-| Column                   | Type     | Options                        | 備考                                 |
-|--------------------------|----------|--------------------------------|--------------------------------------|
-| id                       | integer  | primary_key                    | 案件の一意識別子                       | 
-| customer_name            | string   | null: false                    | 顧客名                                | 
-| sales_office             | string   |                                | 営業拠点                              | 
-| sales_representative     | string   |                                | 営業担当                              | 
-| request_type             | integer  | null: false, default: 0        | ENUM管理（新規/修正/追加/バグ修正など） | 
-| request_content          | integer  | null: false, default: 0        | ENUM管理（WEBアプリ制作など）          | 
-| order_date               | date     |                                | 受注日（カレンダー機能）               | 
-| due_date                 | date     |                                | 納期（カレンダー機能）                 | 
-| revenue                  | integer  | default: 0                     | 売上（1000単位）                      | 
-| cost                     | integer  | default: 0                     | コスト（1000単位）                    | 
-| profit                   | integer  |                                | 売上 - コスト（自動計算）              | 
-| remarks                  | text     |                                | 備考                                 | 
-| attachments              | string   |                                | 添付資料（Excel, Word, PNG, PDFなど） | 
-| user_id                  | integer  | null: false, foreign_key: true | 社員ID（usersテーブルの外部キー）      | 
-| assigned_person          | string   |                                | 担当者（社員ID入力時に自動入力）       | 
-| planning_start_date      | date     |                                | 企画部の作業開始日                    | 
-| planning_end_date        | date     |                                | 企画部の作業完了日                    | 
-| design_start_date        | date     |                                | 情報設計部の作業開始日                 | 
-| design_end_date          | date     |                                | 情報設計部の作業完了日                 | 
-| development_start_date   | date     |                                | 開発部の作業開始日                     | 
-| development_end_date     | date     |                                | 開発部の作業完了日                     | 
-| status                   | integer  | default: 0                     | 状態（0:未着手, 1:進行中, 2:完了）      | 
-| created_at               | datetime |                                | 作成日時                              | 
-| updated_at               | datetime |                                | 更新日時                              | 
+| Column                   | Type     | Options                        | 備考                                     |
+|--------------------------|----------|--------------------------------|------------------------------------------|
+| id                       | integer  | primary_key                    | 案件の一意識別子                           |
+| customer_name            | string   | null: false                    | 顧客名                                    |
+| sales_office             | string   |                                | 営業拠点                                  |
+| sales_representative     | string   |                                | 営業担当                                  |
+| request_type             | integer  | null: false, default: 0        | ENUM管理（新規/修正/追加/バグ修正など）     |
+| request_content          | integer  | null: false, default: 0        | ENUM管理（WEBアプリ制作など）              |
+| order_date               | date     |                                | 受注日（カレンダー機能）                   |
+| due_date                 | date     |                                | 納期（カレンダー機能）                     |
+| revenue                  | integer  | default: 0                     | 売上（1000単位）                          |
+| cost                     | integer  | default: 0                     | コスト（1000単位）                        |
+| profit                   | integer  |                                | 売上 - コスト（自動計算）                  |
+| remarks                  | text     |                                | 備考                                     |
+| attachments              | string   |                                | 添付資料（Excel, Word, PNG, PDFなど）     |
+| user_id                  | integer  | null: false, foreign_key: true | 作成者（usersテーブルの外部キー）          |
+| assigned_person          | string   |                                | 担当者（社員ID入力時に自動入力）           |
+| planning_start_date      | date     |                                | 企画部の作業開始日                        |
+| planning_end_date        | date     |                                | 企画部の作業完了日                        |
+| design_start_date        | date     |                                | 情報設計部の作業開始日                     |
+| design_end_date          | date     |                                | 情報設計部の作業完了日                     |
+| development_start_date   | date     |                                | 開発部の作業開始日                         |
+| development_end_date     | date     |                                | 開発部の作業完了日                         |
+| planning_user_id         | integer  | foreign_key: true              | 企画担当者（usersテーブルの外部キー）       |
+| design_user_id           | integer  | foreign_key: true              | 設計担当者（usersテーブルの外部キー）       |
+| development_user_id      | integer  | foreign_key: true              | 開発担当者（usersテーブルの外部キー）       |
+| status                   | integer  | default: 0                     | 状態（0:未着手, 1:進行中, 2:完了）          |
+| created_at               | datetime |                                | 作成日時                                  |
+| updated_at               | datetime |                                | 更新日時                                  |
 
-Association:
+
+モデルイメージ
 class Project < ApplicationRecord
-- belongs_to :user
+  belongs_to :user
+  belongs_to :planning_user, class_name: "User", foreign_key: :planning_user_id, optional: true
+  belongs_to :design_user, class_name: "User", foreign_key: :design_user_id, optional: true
+  belongs_to :development_user, class_name: "User", foreign_key: :development_user_id, optional: true
 
-- validates :customer_name, presence: true
-- validates :request_type, presence: true
-- validates :request_content, presence: true
-- validates :revenue, numericality: { greater_than_or_equal_to: 0 }
-- validates :cost, numericality: { greater_than_or_equal_to: 0 }
+  validates :customer_name, presence: true
+  validates :request_type, presence: true
+  validates :request_content, presence: true
+  validates :revenue, numericality: { greater_than_or_equal_to: 0 }
+  validates :cost, numericality: { greater_than_or_equal_to: 0 }
 
-- before_save :calculate_profit
+  before_save :calculate_profit
 
-- enum status: { 未着手: 0, 進行中: 1, 完了: 2 }
+  enum status: { 未着手: 0, 進行中: 1, 完了: 2 }
+  enum request_type: { 新規: 0, 修正: 1, 追加: 2, バグ修正: 3 }
+  enum request_content: { WEBアプリ制作: 0, サイト改修: 1, その他: 2 }
 
-- private
+  private
 
   def calculate_profit
     self.profit = self.revenue - self.cost
   end
+end
