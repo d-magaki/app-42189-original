@@ -1,0 +1,63 @@
+<h1 class="page-title">案件登録</h1>
+
+<%= form_with model: @project, url: projects_path, method: :post, multipart: true do |form| %>
+  <div class="table-responsive">
+    <table id="projects-table" class="table table-striped">
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>入力内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th>顧客名</th><td><%= form.text_field :customer_name, class: "form-control" %></td></tr>
+        <tr><th>営業拠点</th><td><%= form.text_field :sales_office, class: "form-control" %></td></tr>
+        <tr><th>営業担当</th><td><%= form.text_field :sales_representative, class: "form-control" %></td></tr>
+        <tr><th>依頼種別</th><td><%= form.select :request_type, Project.request_types.keys, {}, class: "form-control" %></td></tr>
+        <tr><th>依頼内容</th><td><%= form.select :request_content, Project.request_contents.keys, {}, class: "form-control" %></td></tr>
+        <tr><th>受注日</th><td><%= form.date_field :order_date, class: "form-control" %></td></tr>
+        <tr><th>納期</th><td><%= form.date_field :due_date, class: "form-control" %></td></tr>
+
+        <!-- 🔹 金額関連（売上・コスト・利益） -->
+        <tr><th>売上</th><td><%= form.number_field :revenue, step: 1000, class: "form-control", id: "project_revenue" %></td></tr>
+        <tr><th>コスト</th><td><%= form.number_field :cost, step: 1000, class: "form-control", id: "project_cost" %></td></tr>
+        <tr><th>利益</th><td><%= form.number_field :profit, step: 1000, class: "form-control", readonly: true, id: "profit-field" %></td></tr>
+
+        <tr><th>備考</th><td><%= form.text_area :remarks, class: "form-control" %></td></tr>
+
+        <!-- 🔹 添付資料 -->
+        <tr>
+          <th>添付資料</th>
+          <td>
+            <%= form.file_field :attachments, multiple: true, class: "form-control" %>
+          </td>
+        </tr>
+
+        <tr><th>状態</th><td><%= form.select :status, Project.statuses.keys.map { |status| [status.humanize, status] }, {}, class: "form-control" %></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 🔹 ボタンを横並びに配置 -->
+  <div class="actions">
+    <%= form.submit "登録", class: "btn btn-primary btn-lg" %>
+    <%= link_to "キャンセル", projects_path, class: "btn btn-secondary btn-lg" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const revenueField = document.getElementById("project_revenue");
+    const costField = document.getElementById("project_cost");
+    const profitField = document.getElementById("profit-field");
+
+    function updateProfit() {
+      const revenue = parseInt(revenueField.value) || 0;
+      const cost = parseInt(costField.value) || 0;
+      profitField.value = revenue - cost;
+    }
+
+    revenueField.addEventListener("input", updateProfit);
+    costField.addEventListener("input", updateProfit);
+  });
+</script>
