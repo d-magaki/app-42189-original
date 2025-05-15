@@ -6,7 +6,7 @@
     <%= link_to "リスト分析", analytics_path, class: "btn btn-info" %>
     <%= form_with url: import_projects_path, method: :post, multipart: true, class: "d-flex align-items-center gap-2" do |form| %>
       <%= form.file_field :file, class: "form-control" %>
-      <%= form.submit "Date Import", class: "btn btn-primary" %>
+      <%= form.submit "Data Import", class: "btn btn-primary" %>
     <% end %>
   </div>
 <% end %>
@@ -23,18 +23,25 @@
           <th style="width: 150px;">依頼内容</th>
           <th style="width: 120px;">受注日</th>
           <th style="width: 120px;">納期</th>
+
           <% if current_user.管理者? %>
             <th style="width: 120px;">売上</th>
             <th style="width: 120px;">コスト</th>
             <th style="width: 120px;">利益</th>
           <% end %>
+
           <th style="width: 200px;">備考</th>
           <th style="width: 180px;">添付資料</th>
-          <th style="width: 120px;">担当社員ID</th>
-          <th style="width: 140px;">担当社員名</th>
+
           <% if current_user.管理者? %>
+            <th style="width: 120px;">担当社員ID</th>
+            <th style="width: 140px;">担当社員名</th>
             <th style="width: 100px;">権限</th>
+          <% else %>
+            <th style="width: 120px;">社員ID</th>
+            <th style="width: 140px;">担当者名</th>
           <% end %>
+
           <% if current_user.管理者? || current_user.department == "企画部" %>
             <th style="width: 140px;">企画開始</th>
             <th style="width: 140px;">企画完了</th>
@@ -47,19 +54,16 @@
             <th style="width: 140px;">開発開始</th>
             <th style="width: 140px;">開発完了</th>
           <% end %>
+
           <th style="width: 100px;">状態</th>
         </tr>
       </thead>
+
       <tbody>
         <% @projects.each do |project| %>
           <% next unless should_show_in_list?(project, current_user, @filter) %>
 
-          <tr data-url="<%= project_path(project.id) %>"
-              data-complete="<%= project_completed?(project, current_user.department) ? 'true' : 'false' %>"
-              data-planning="<%= project.planning_user_id.present? %>"
-              data-design="<%= project.design_user_id.present? %>"
-              data-development="<%= project.development_user_id.present? %>">
-
+          <tr data-url="<%= project_path(project.id) %>">
             <td><%= project.customer_name %></td>
             <td><%= project.sales_office %></td>
             <td><%= project.sales_representative %></td>
@@ -83,7 +87,13 @@
               <% else %>なし<% end %>
             </td>
 
-            <% if current_user.管理者? || current_user.department == "企画部" %>
+            <%# 担当者表示切替 %>
+            <% if current_user.管理者? %>
+              <% user = User.find_by(id: project.planning_user_id || project.design_user_id || project.development_user_id) %>
+              <td><%= user&.employee_id || "未設定" %></td>
+              <td><%= user&.user_name || "未設定" %></td>
+              <td><%= user&.role == "管理者" ? "管理者" : "一般社員" %></td>
+            <% elsif current_user.department == "企画部" %>
               <% user = User.find_by(id: project.planning_user_id) %>
               <td><%= user&.employee_id || "未設定" %></td>
               <td><%= user&.user_name || "未設定" %></td>
@@ -95,10 +105,6 @@
               <% user = User.find_by(id: project.development_user_id) %>
               <td><%= user&.employee_id || "未設定" %></td>
               <td><%= user&.user_name || "未設定" %></td>
-            <% end %>
-
-            <% if current_user.管理者? %>
-              <td><%= project.user&.role == 1 ? "管理者" : "一般社員" %></td>
             <% end %>
 
             <% if current_user.管理者? || current_user.department == "企画部" %>
@@ -121,29 +127,28 @@
     </table>
   </div>
 
+  <!-- 担当件数下部エリア -->
   <div class="chart-container p-3 bg-light" style="overflow: auto;">
-    <div class="mb-2">
-      <%# <%= link_to "未着手", projects_path(filter: "unstarted"), class: "btn btn-outline-secondary btn-sm me-2" %>
-    </div>
-
-<div class="mt-3">
-  <h5>社員別 担当案件数</h5>
-  <table class="table table-bordered w-auto">
-    <thead class="table-primary">
-      <tr>
-        <th>社員名</th>
-        <th>担当件数</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @employee_tasks.each do |user, count| %>
-        <% if count > 0 %>
+    <div class="mt-3">
+      <h5 class="fw-bold mb-3">社員別 担当案件数</h5>
+      <table class="table table-bordered w-auto">
+        <thead class="table-primary">
           <tr>
-            <td><%= user.user_name %></td>
-            <td><%= count %> 件</td>
+            <th>社員名</th>
+            <th>担当件数</th>
           </tr>
-        <% end %>
-      <% end %>
-    </tbody>
-  </table>
+        </thead>
+        <tbody>
+          <% @employee_tasks.each do |user, count| %>
+            <% if count > 0 %>
+              <tr>
+                <td><%= user.user_name %></td>
+                <td><%= count %> 件</td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
