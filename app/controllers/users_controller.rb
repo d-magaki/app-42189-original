@@ -14,7 +14,7 @@ class UsersController < ApplicationController
 
     if @user.save
       logger.debug "ユーザー登録成功"
-      redirect_to root_path, notice: "ユーザーを登録しました。"
+      redirect_to users_path, notice: "ユーザーを登録しました。"
     else
       logger.debug "登録失敗: #{@user.errors.full_messages}"
       render :new, status: :unprocessable_entity

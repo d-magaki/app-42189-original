@@ -1,39 +1,152 @@
-<div class="container my-5">
-  <h1 class="page-title text-center">案件分析</h1>
+<h1 class="mb-4">リスト分析</h1>
 
-  <!-- 上段：横並び2つ -->
-  <div class="row gx-4 gy-4">
-    <div class="col-md-6">
-      <div class="chart-container">
-        <h2 class="h5">社員別売上</h2>
-        <canvas id="employeePerformanceChart" height="300"></canvas>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="chart-container">
-        <h2 class="h5">依頼種別割合</h2>
-        <canvas id="requestTypeChart" height="300"></canvas>
+<!-- 上段：カスタムグラフ + 依頼種別割合 -->
+<div class="row gx-4 gy-4 mb-4">
+  <!-- カスタムグラフ -->
+  <div class="col-md-6">
+    <div class="bg-white p-3 shadow rounded h-100">
+      <h2 class="h5 mb-3">カスタムグラフ</h2>
+      <%= form_with url: analytics_path, method: :get, local: true do |f| %>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <label class="mb-0">期間:</label>
+          <%= f.date_field :sales_from, value: @form_params[:sales_from], class: "form-control" %>
+          <span>〜</span>
+          <%= f.date_field :sales_to, value: @form_params[:sales_to], class: "form-control" %>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <%= f.select :axis_field, [["社員名", "users.user_name"], ["部署", "users.department"], ["営業拠点", "sales_office"], ["顧客名", "customer_name"]], selected: @selected_axis, class: "form-select" %>
+          <%= f.select :metric, [["売上", "revenue"], ["コスト", "cost"], ["利益", "profit"], ["件数", "count"]], selected: @selected_metric, class: "form-select" %>
+          <%= f.select :chart_type, [["棒グラフ", "bar"], ["円グラフ", "pie"], ["折れ線", "line"]], selected: @selected_chart_type, class: "form-select" %>
+          <%= f.submit "更新", class: "btn btn-primary" %>
+        </div>
+
+        <%# 他のグラフのパラメータ保持 %>
+        <%= hidden_field_tag :request_from, @form_params[:request_from] %>
+        <%= hidden_field_tag :request_to, @form_params[:request_to] %>
+        <%= hidden_field_tag :status_from, @form_params[:status_from] %>
+        <%= hidden_field_tag :status_to, @form_params[:status_to] %>
+        <%= hidden_field_tag :average_from, @form_params[:average_from] %>
+        <%= hidden_field_tag :average_to, @form_params[:average_to] %>
+      <% end %>
+
+      <div style="height: 300px;">
+        <canvas id="customChart" data-type="<%= @selected_chart_type %>"></canvas>
       </div>
     </div>
   </div>
 
-  <!-- 下段：1つ -->
-  <div class="row mt-5">
-    <div class="col-12">
-      <div class="chart-container">
-        <h2 class="h5">納期までの案件数</h2>
-        <canvas id="deliveryTimelineChart" height="300"></canvas>
+  <!-- 依頼種別割合 -->
+  <div class="col-md-6">
+    <div class="bg-white p-3 shadow rounded h-100">
+      <h2 class="h5 mb-3">依頼種別割合</h2>
+      <%= form_with url: analytics_path, method: :get, local: true do |f| %>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <label class="mb-0">期間:</label>
+          <%= f.date_field :request_from, value: @form_params[:request_from], class: "form-control" %>
+          <span>〜</span>
+          <%= f.date_field :request_to, value: @form_params[:request_to], class: "form-control" %>
+          <%= f.submit "更新", class: "btn btn-primary" %>
+        </div>
+        <%= hidden_field_tag :axis_field, @selected_axis %>
+        <%= hidden_field_tag :metric, @selected_metric %>
+        <%= hidden_field_tag :chart_type, @selected_chart_type %>
+        <%= hidden_field_tag :sales_from, @form_params[:sales_from] %>
+        <%= hidden_field_tag :sales_to, @form_params[:sales_to] %>
+        <%= hidden_field_tag :status_from, @form_params[:status_from] %>
+        <%= hidden_field_tag :status_to, @form_params[:status_to] %>
+        <%= hidden_field_tag :average_from, @form_params[:average_from] %>
+        <%= hidden_field_tag :average_to, @form_params[:average_to] %>
+      <% end %>
+
+      <div style="height: 300px;">
+        <canvas id="requestTypeChart"></canvas>
       </div>
     </div>
   </div>
 </div>
 
-<!-- JSONデータをscriptタグ内に埋め込む（JS側で読み取る） -->
-<script id="sales-data-labels" type="application/json"><%= @sales_by_employee.keys.to_json.html_safe %></script>
-<script id="sales-data-values" type="application/json"><%= @sales_by_employee.values.to_json.html_safe %></script>
+<!-- 下段：案件ステータス + 平均処理 -->
+<div class="row gx-4 gy-4">
+  <!-- 案件ステータス一覧 -->
+  <div class="col-md-6">
+    <div class="bg-white p-3 shadow rounded h-100 w-100">
+      <h2 class="h5 mb-3">案件ステータス一覧</h2>
+      <%= form_with url: analytics_path, method: :get, local: true do |f| %>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <label class="mb-0">期間:</label>
+          <%= f.date_field :status_from, value: @form_params[:status_from], class: "form-control" %>
+          <span>〜</span>
+          <%= f.date_field :status_to, value: @form_params[:status_to], class: "form-control" %>
+          <%= f.submit "更新", class: "btn btn-primary" %>
+        </div>
+        <%= hidden_field_tag :axis_field, @selected_axis %>
+        <%= hidden_field_tag :metric, @selected_metric %>
+        <%= hidden_field_tag :chart_type, @selected_chart_type %>
+        <%= hidden_field_tag :sales_from, @form_params[:sales_from] %>
+        <%= hidden_field_tag :sales_to, @form_params[:sales_to] %>
+        <%= hidden_field_tag :request_from, @form_params[:request_from] %>
+        <%= hidden_field_tag :request_to, @form_params[:request_to] %>
+        <%= hidden_field_tag :average_from, @form_params[:average_from] %>
+        <%= hidden_field_tag :average_to, @form_params[:average_to] %>
+      <% end %>
 
+      <table class="table table-bordered w-auto">
+        <thead class="table-secondary">
+          <tr><th>状態</th><th>件数</th></tr>
+        </thead>
+        <tbody>
+          <% @status_summary.each do |label, count| %>
+            <tr><td><%= label %></td><td><%= count %> 件</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 平均処理必要数 -->
+  <div class="col-md-6">
+    <div class="bg-white p-3 shadow rounded h-100 w-100">
+      <h2 class="h5 mb-3">1日あたりの平均処理必要数</h2>
+      <%= form_with url: analytics_path, method: :get, local: true do |f| %>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <label class="mb-0">期間:</label>
+          <%= f.date_field :average_from, value: @form_params[:average_from], class: "form-control" %>
+          <span>〜</span>
+          <%= f.date_field :average_to, value: @form_params[:average_to], class: "form-control" %>
+          <%= f.submit "更新", class: "btn btn-primary" %>
+        </div>
+        <%= hidden_field_tag :axis_field, @selected_axis %>
+        <%= hidden_field_tag :metric, @selected_metric %>
+        <%= hidden_field_tag :chart_type, @selected_chart_type %>
+        <%= hidden_field_tag :sales_from, @form_params[:sales_from] %>
+        <%= hidden_field_tag :sales_to, @form_params[:sales_to] %>
+        <%= hidden_field_tag :request_from, @form_params[:request_from] %>
+        <%= hidden_field_tag :request_to, @form_params[:request_to] %>
+        <%= hidden_field_tag :status_from, @form_params[:status_from] %>
+        <%= hidden_field_tag :status_to, @form_params[:status_to] %>
+      <% end %>
+
+      <p>最も遠い納期までに完了すべき案件数の目安です。</p>
+      <table class="table table-bordered w-auto">
+        <thead class="table-warning">
+          <tr><th>残日数</th><th>未完了案件数</th><th>1日あたり</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><%= @remaining_days %> 日</td>
+            <td><%= @remaining_projects %> 件</td>
+            <td><%= @remaining_days > 0 ? sprintf("%.1f", @average_per_day) : "－" %> 件/日</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js データ埋め込み -->
+<script id="custom-chart-labels" type="application/json"><%= @custom_labels.to_json.html_safe %></script>
+<script id="custom-chart-values" type="application/json"><%= @custom_values.to_json.html_safe %></script>
 <script id="request-labels" type="application/json"><%= @request_type_counts.keys.to_json.html_safe %></script>
 <script id="request-values" type="application/json"><%= @request_type_counts.values.to_json.html_safe %></script>
-
-<script id="timeline-labels" type="application/json"><%= @delivery_timelines.keys.to_json.html_safe %></script>
-<script id="timeline-values" type="application/json"><%= @delivery_timelines.values.to_json.html_safe %></script>
+<%= javascript_importmap_tags "analytics" %>

@@ -18,10 +18,7 @@
         <%= link_to "分析", analytics_path %>
       <% end %>
 
-      <%= button_to "ログアウト", destroy_user_session_path,
-                    method: :delete,
-                    data: { turbo: false, confirm: "ログアウトしますか？" },
-                    class: "btn btn-outline-primary" %>
+      <%= link_to "ログアウト", destroy_user_session_path, method: :delete, data: { confirm: "ログアウトしますか？" } %>
     </nav>
   </div>
 </div>

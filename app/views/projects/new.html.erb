@@ -46,18 +46,20 @@
 <% end %>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("turbo:load", function() {
     const revenueField = document.getElementById("project_revenue");
     const costField = document.getElementById("project_cost");
     const profitField = document.getElementById("profit-field");
 
-    function updateProfit() {
-      const revenue = parseInt(revenueField.value) || 0;
-      const cost = parseInt(costField.value) || 0;
-      profitField.value = revenue - cost;
-    }
+    if (revenueField && costField && profitField) {
+      function updateProfit() {
+        const revenue = parseInt(revenueField.value) || 0;
+        const cost = parseInt(costField.value) || 0;
+        profitField.value = revenue - cost;
+      }
 
-    revenueField.addEventListener("input", updateProfit);
-    costField.addEventListener("input", updateProfit);
+      revenueField.addEventListener("input", updateProfit);
+      costField.addEventListener("input", updateProfit);
+    }
   });
 </script>

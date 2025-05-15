@@ -1,7 +1,6 @@
 <h1 class="page-title">案件編集</h1>
 
 <%= form_with(model: @project, url: project_path(@project), method: :patch, class: "edit-form") do |form| %>
-
   <div class="table-responsive">
     <table id="projects-table" class="table table-striped">
       <thead>
@@ -19,13 +18,12 @@
         <tr><th>受注日</th><td><%= form.date_field :order_date, class: "form-control" %></td></tr>
         <tr><th>納期</th><td><%= form.date_field :due_date, class: "form-control" %></td></tr>
 
-        <!-- 🔹 添付資料を納期の下、備考の上に配置 -->
         <tr>
           <th>添付資料</th>
           <td>
-            <%= form.file_field :new_attachments, multiple: true, class: "form-control" %>
+            <%= form.file_field :attachments, multiple: true, class: "form-control" %>
             <% if @project.attachments.attached? %>
-              <p>添付済みファイル:</p>
+              <p>添付済みファイル: ※削除したい場合はチェックを付けて更新</p>
               <% @project.attachments.each do |attachment| %>
                 <%= link_to attachment.filename.to_s, rails_blob_path(attachment, disposition: "inline"), target: "_blank" %>
                 <%= check_box_tag "remove_attachments[]", attachment.id %><br>
@@ -36,20 +34,50 @@
           </td>
         </tr>
 
-        <!-- 🔹 備考を納期の下に配置 -->
         <tr><th>備考</th><td><%= form.text_area :remarks, class: "form-control" %></td></tr>
 
-        <tr><th>社員ID</th><td><%= form.text_field :user_id, class: "form-control" %></td></tr>
-        <tr><th>社員名</th><td><%= form.text_field :user_name, class: "form-control" %></td></tr>
-        <tr><th>部署</th><td><%= form.text_field :user_department, class: "form-control" %></td></tr>
-        <tr><th>メールアドレス</th><td><%= form.text_field :user_email, class: "form-control" %></td></tr>
-        <tr><th>権限</th><td><%= form.select :user_role, [["管理者", 1], ["一般社員", 0]], {}, class: "form-control" %></td></tr>
-        <tr><th>企画開始日</th><td><%= form.date_field :planning_start_date, class: "form-control" %></td></tr>
-        <tr><th>企画完了日</th><td><%= form.date_field :planning_end_date, class: "form-control" %></td></tr>
-        <tr><th>設計開始日</th><td><%= form.date_field :design_start_date, class: "form-control" %></td></tr>
-        <tr><th>設計完了日</th><td><%= form.date_field :design_end_date, class: "form-control" %></td></tr>
-        <tr><th>開発開始日</th><td><%= form.date_field :development_start_date, class: "form-control" %></td></tr>
-        <tr><th>開発完了日</th><td><%= form.date_field :development_end_date, class: "form-control" %></td></tr>
+        <tr><th>社員ID</th>
+          <td>
+            <%= text_field_tag :employee_id, @project.planning_user&.employee_id || @project.design_user&.employee_id || @project.development_user&.employee_id, class: "form-control", id: "employee-id-input" %>
+
+            <%= hidden_field_tag "project[planning_user_id]", @project.planning_user_id, id: "planning-user-id" %>
+            <%= hidden_field_tag "project[design_user_id]", @project.design_user_id, id: "design-user-id" %>
+            <%= hidden_field_tag "project[development_user_id]", @project.development_user_id, id: "development-user-id" %>
+          </td>
+        </tr>
+
+
+        <% if current_user.管理者? || current_user.department == "企画部" %>
+          <tr><th>企画担当者</th><td id="planning-user-name"><%= @project.planning_user&.user_name || "未設定" %></td></tr>
+        <% end %>
+
+        <% if current_user.管理者? || current_user.department == "情報設計部" %>
+          <tr><th>設計担当者</th><td id="design-user-name"><%= @project.design_user&.user_name || "未設定" %></td></tr>
+        <% end %>
+
+        <% if current_user.管理者? || current_user.department == "開発部" %>
+          <tr><th>開発担当者</th><td id="development-user-name"><%= @project.development_user&.user_name || "未設定" %></td></tr>
+        <% end %>
+
+        <% if current_user.管理者? %>
+          <tr><th>権限</th><td id="user-role-display"></td></tr>
+        <% end %>
+
+        <% if current_user.管理者? || current_user.department == "企画部" %>
+          <tr><th>企画開始日</th><td><%= form.date_field :planning_start_date, class: "form-control" %></td></tr>
+          <tr><th>企画完了日</th><td><%= form.date_field :planning_end_date, class: "form-control" %></td></tr>
+        <% end %>
+
+        <% if current_user.管理者? || current_user.department == "情報設計部" %>
+          <tr><th>設計開始日</th><td><%= form.date_field :design_start_date, class: "form-control" %></td></tr>
+          <tr><th>設計完了日</th><td><%= form.date_field :design_end_date, class: "form-control" %></td></tr>
+        <% end %>
+
+        <% if current_user.管理者? || current_user.department == "開発部" %>
+          <tr><th>開発開始日</th><td><%= form.date_field :development_start_date, class: "form-control" %></td></tr>
+          <tr><th>開発完了日</th><td><%= form.date_field :development_end_date, class: "form-control" %></td></tr>
+        <% end %>
+
         <tr><th>状態</th><td><%= form.select :status, Project.statuses.keys.map { |status| [status.humanize, status] }, {}, class: "form-control" %></td></tr>
       </tbody>
     </table>
@@ -59,5 +87,4 @@
     <%= form.submit "更新", class: "btn btn-primary btn-lg" %>
     <%= link_to "キャンセル", project_path(@project), class: "btn btn-secondary btn-lg" %>
   </div>
-
 <% end %>

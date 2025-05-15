@@ -3,8 +3,29 @@ class ProjectsController < ApplicationController
   require 'roo'
 
   def index
-    @projects = Project.includes(:user).all
+    @filter = params[:filter].presence || "in_progress"
+    @projects = Project.includes(:planning_user, :design_user, :development_user).all
+
+    # 各工程の担当者を合算した件数（部署関係なく）
+    @user_project_counts = User.all.index_with do |user|
+      Project.where(
+        "planning_user_id = :id OR design_user_id = :id OR development_user_id = :id",
+        id: user.id
+      ).count
+    end
+
+    # 未着手の案件だけを担当者別にカウント
+    @employee_tasks = User.includes(:projects).each_with_object({}) do |user, hash|
+      count = Project.where(
+        "(planning_user_id = :id AND planning_start_date IS NULL AND planning_end_date IS NULL) OR
+        (design_user_id = :id AND design_start_date IS NULL AND design_end_date IS NULL) OR
+        (development_user_id = :id AND development_start_date IS NULL AND development_end_date IS NULL)",
+        id: user.id
+      ).count
+      hash[user] = count
+    end
   end
+
 
   def show
     @project = Project.find(params[:id])
@@ -18,7 +39,6 @@ class ProjectsController < ApplicationController
     @project = Project.new(project_params)
 
     if @project.save
-      attach_files
       redirect_to projects_path, notice: "案件を登録しました！"
     else
       render :new
@@ -32,59 +52,55 @@ class ProjectsController < ApplicationController
   def update
     @project = Project.find(params[:id])
 
-    Rails.logger.debug "更新データ: #{params[:project].inspect}"
+    if params[:remove_attachments].present?
+      params[:remove_attachments].each do |id|
+        attachment = @project.attachments.find_by(id: id)
+        attachment.purge if attachment.present?
+      end
+    end
 
-    if @project.update(project_params)
+    if params[:project][:attachments].present?
+      @project.attachments.attach(params[:project][:attachments])
+    end
+
+    @project.planning_user_id = params[:project][:planning_user_id].presence
+    @project.design_user_id = params[:project][:design_user_id].presence
+    @project.development_user_id = params[:project][:development_user_id].presence
+
+    if @project.update(project_params.except(:attachments, :employee_id, :planning_user_id, :design_user_id, :development_user_id))
       redirect_to @project, notice: "案件を更新しました！"
     else
-      Rails.logger.debug "更新失敗: #{@project.errors.full_messages}"
-      render :edit
+      logger.debug "❌ 更新失敗: #{@project.errors.full_messages}"
+      render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
     @project = Project.find(params[:id])
-
-    Rails.logger.debug "削除リクエスト受信: #{@project.inspect}"
-
     @project.attachments.purge if @project.attachments.attached?
 
     if @project.destroy
-      Rails.logger.debug "削除成功: ID #{@project.id}"
       redirect_to projects_path, notice: "案件を削除しました！"
     else
-      Rails.logger.debug "削除失敗: #{@project.errors.full_messages}"
       redirect_to projects_path, alert: "削除できませんでした！"
     end
   end
 
-  # CSV/Excel インポート処理
   def import
-    Rails.logger.debug "インポート処理開始: #{params.inspect}"
-
     file = params[:file]
-
     if file.blank?
-      Rails.logger.debug "⚠️ファイルが選択されていません"
       redirect_to projects_path, alert: "ファイルを選択してください。" and return
     end
 
-    Rails.logger.debug "受信したファイル: #{file.original_filename}"
-
     begin
       spreadsheet = Roo::Spreadsheet.open(file.path)
-      Rails.logger.debug "✅シート名: #{spreadsheet.sheets.inspect}"
     rescue => e
-      Rails.logger.error "⚠️Excelの読み込みに失敗: #{e.message}"
       redirect_to projects_path, alert: "ファイルの解析に失敗しました。" and return
     end
 
     header = spreadsheet.row(1)
-    Rails.logger.debug "読み込んだヘッダー: #{header}"
-
     (2..spreadsheet.last_row).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
-      Rails.logger.debug "処理中の行データ: #{row}"
 
       user = User.find_by(employee_id: row["社員ID"])
       status_value = { "未着手" => 0, "進行中" => 1, "完了" => 2 }[row["状態"]] || 0
@@ -92,26 +108,16 @@ class ProjectsController < ApplicationController
       valid_request_types = ["新規依頼", "修正依頼", "追加依頼", "バグ修正", "その他＿依頼"]
       valid_request_contents = ["WEBアプリ制作", "WEBデザイン制作", "スマホアプリ制作", "システム構築", "データ解析", "その他＿内容"]
 
-      request_type_value = row["依頼種別"]
-      request_content_value = row["依頼内容"]
-
-      unless valid_request_types.include?(request_type_value)
-        Rails.logger.warn "⚠️ 無効な依頼種別: #{request_type_value} → `その他＿依頼` に変更"
-        request_type_value = "その他＿依頼"
-      end
-
-      unless valid_request_contents.include?(request_content_value)
-        Rails.logger.warn "⚠️ 無効な依頼内容: #{request_content_value} → `その他＿内容` に変更"
-        request_content_value = "その他＿内容"
-      end
+      request_type = valid_request_types.include?(row["依頼種別"]) ? row["依頼種別"] : "その他＿依頼"
+      request_content = valid_request_contents.include?(row["依頼内容"]) ? row["依頼内容"] : "その他＿内容"
 
       begin
-        project = Project.create!(
+        Project.create!(
           customer_name: row["顧客名"],
           sales_office: row["営業拠点"],
           sales_representative: row["営業担当"],
-          request_type: request_type_value,
-          request_content: request_content_value,
+          request_type: request_type,
+          request_content: request_content,
           order_date: row["受注日"].to_s,
           due_date: row["納期"].to_s,
           revenue: row["売上"].to_i,
@@ -128,8 +134,6 @@ class ProjectsController < ApplicationController
           development_end_date: row["開発完了日"].to_s,
           status: status_value
         )
-
-        Rails.logger.debug "✅ 登録成功: #{project.inspect}"
       rescue => e
         Rails.logger.error "⚠️ インポートエラー（行#{i}）: #{e.message}"
       end
@@ -138,7 +142,6 @@ class ProjectsController < ApplicationController
     redirect_to projects_path, notice: "案件データをインポートしました！"
   end
 
-  # 分析アクション
   def analysis
     @count_by_status = Project.group(:status).count
 
@@ -160,20 +163,26 @@ class ProjectsController < ApplicationController
     @project = Project.find(params[:id])
   end
 
-  def attach_files
-    if params[:project][:attachments].present?
-      @project.attachments.attach(params[:project][:attachments])
-    end
-  end
-
   def project_params
     params.require(:project).permit(
       :customer_name, :sales_office, :sales_representative,
       :request_type, :request_content, :order_date, :due_date,
-      :revenue, :cost, :profit, :remarks, :status, :user_id,
+      :revenue, :cost, :profit, :remarks, :status,
+      :employee_id,
       :assigned_person, :planning_start_date, :planning_end_date,
-      :design_start_date, :design_end_date, :development_start_date,
-      :development_end_date, attachments: []
+      :design_start_date, :design_end_date,
+      :development_start_date, :development_end_date,
+      :planning_user_id, :design_user_id, :development_user_id,
+      attachments: []
     )
+  end
+
+  def dept_column(dept)
+    case dept
+    when "企画部" then "planning"
+    when "情報設計部" then "design"
+    when "開発部" then "development"
+    else "unknown"
+    end
   end
 end

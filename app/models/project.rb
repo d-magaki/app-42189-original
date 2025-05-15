@@ -1,6 +1,11 @@
 class Project < ApplicationRecord
   belongs_to :user, optional: true
   has_many_attached :attachments
+  belongs_to :planning_user, class_name: "User", optional: true
+  belongs_to :design_user, class_name: "User", optional: true
+  belongs_to :development_user, class_name: "User", optional: true
+
+  attr_accessor :employee_id
 
   enum status: { 未着手: 0, 進行中: 1, 完了: 2 }
 
