@@ -4,6 +4,7 @@ class Project < ApplicationRecord
   belongs_to :planning_user, class_name: "User", foreign_key: "planning_user_id", optional: true
   belongs_to :design_user, class_name: "User", foreign_key: "design_user_id", optional: true
   belongs_to :development_user, class_name: "User", foreign_key: "development_user_id", optional: true
+  has_many_attached :attachments
 
   validates :customer_name, presence: true
   validates :request_type, presence: true
@@ -18,6 +19,7 @@ class Project < ApplicationRecord
 
   # 売上・コスト差額の自動計算
   before_save :calculate_profit
+
 
   private
 

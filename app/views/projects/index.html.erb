@@ -1,0 +1,124 @@
+<h1>案件一覧</h1>
+
+<%= link_to "新規登録", new_project_path, class: "btn btn-success mb-3" %>
+<%= link_to "分析画面へ", analytics_path, class: "btn btn-info ms-2" %>
+
+<div class="upload-section mb-3">
+  <%= form_with url: import_projects_path, method: :post, multipart: true do |form| %>
+    <%= form.file_field :file, class: "form-control" %>
+    <%= form.submit "インポート", class: "btn btn-primary mt-2" %>
+  <% end %>
+</div>
+
+<!-- 上部: 一覧リスト -->
+<div class="list-container">
+  <div class="table-responsive">
+    <table id="projects-table" class="table table-striped">
+      <thead>
+        <tr>
+          <th>顧客名</th>
+          <th>営業拠点</th>
+          <th>営業担当</th>
+          <th>依頼種別</th>
+          <th>依頼内容</th>
+          <th>受注日</th>
+          <th>納期</th>
+          <th>売上</th>
+          <th>コスト</th>
+          <th>利益</th>
+          <th>備考</th>
+          <th>添付資料</th>
+          <th>担当社員ID</th>
+          <th>担当社員名</th>
+          <th>部署</th>
+          <th>メールアドレス</th>
+          <th>権限</th>
+          <th>企画開始日</th>
+          <th>企画完了日</th>
+          <th>設計開始日</th>
+          <th>設計完了日</th>
+          <th>開発開始日</th>
+          <th>開発完了日</th>
+          <th>状態</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @projects.each do |project| %>
+          <tr data-url="<%= project_path(project.id) %>">
+            <td><%= project.customer_name %></td>
+            <td><%= project.sales_office %></td>
+            <td><%= project.sales_representative %></td>
+            <td><%= project.request_type %></td>
+            <td><%= project.request_content %></td>
+            <td><%= project.order_date %></td>
+            <td><%= project.due_date %></td>
+            <td><%= number_with_delimiter(project.revenue) %> 円</td>
+            <td><%= number_with_delimiter(project.cost) %> 円</td>
+            <td><%= number_with_delimiter(project.profit) %> 円</td>
+            <td><%= project.remarks %></td>
+            <td>
+              <% if project.attachments.attached? %>
+                <% project.attachments.each do |attachment| %>
+                  <%= link_to attachment.filename.to_s, rails_blob_path(attachment, disposition: "inline"), target: "_blank" %><br>
+                <% end %>
+              <% else %>
+                なし
+              <% end %>
+            </td>
+            <td><%= project.user&.employee_id || "未設定" %></td>
+            <td><%= project.user&.user_name || "未設定" %></td>
+            <td><%= project.user&.department || "未設定" %></td>
+            <td><%= project.user&.email || "未設定" %></td>
+            <td><%= project.user&.role == 1 ? "管理者" : "一般社員" %></td>
+            <td><%= project.planning_start_date %></td>
+            <td><%= project.planning_end_date %></td>
+            <td><%= project.design_start_date %></td>
+            <td><%= project.design_end_date %></td>
+            <td><%= project.development_start_date %></td>
+            <td><%= project.development_end_date %></td>
+            <td><%= project.status %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 下部: グラフ -->
+<div class="chart-container mt-4">
+  <h2>案件の状況</h2>
+  <canvas id="projectChart"></canvas>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll("#projects-table tbody tr").forEach(row => {
+      row.addEventListener("dblclick", function() {
+        const url = row.dataset.url;
+        if (url) {
+          window.location.href = url;
+        }
+      });
+    });
+
+    //  Chart.js を使ってグラフを描画
+    const ctx = document.getElementById("projectChart").getContext("2d");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["新規依頼", "修正依頼", "追加依頼", "バグ修正", "その他依頼"],
+        datasets: [{
+          label: "案件数",
+          data: [10, 15, 20, 5, 8], //  Railsのデータを適用可能
+          backgroundColor: ["#4CAF50", "#FF9800", "#2196F3", "#E91E63", "#9C27B0"]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true }
+        }
+      }
+    });
+  });
+</script>

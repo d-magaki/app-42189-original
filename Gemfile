@@ -68,3 +68,6 @@ group :test do
 end
 
 gem 'devise'
+
+gem 'roo'
+gem 'activestorage-validator'
