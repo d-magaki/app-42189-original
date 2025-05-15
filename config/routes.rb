@@ -1,19 +1,18 @@
 Rails.application.routes.draw do
   devise_for :users
 
-  root "projects#index"
+  root "home#index"
   get "analytics", to: "analytics#index"
 
-  resources :projects do
-    # コレクション単位（全体に対するアクション）
-    collection do
-      post :import         # インポート機能
-      get  :analysis       # ← 分析画面（今回追加）
-    end
+  resources :users
 
-    # メンバー単位（個別IDに対するアクション）
+  resources :projects do
+    collection do
+      post :import
+      get  :analysis
+    end
     member do
-      delete :destroy      # 明示的な削除（必要ならそのまま残す）
+      delete :destroy
     end
   end
 end
