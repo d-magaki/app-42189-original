@@ -1,0 +1,53 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  customer_name: MyString
+  sales_office: MyString
+  sales_representative: MyString
+  request_type: 1
+  request_content: 1
+  order_date: 2025-05-15
+  due_date: 2025-05-15
+  revenue: 1
+  cost: 1
+  profit: 1
+  remarks: MyText
+  attachments: MyString
+  user: one
+  assigned_person: MyString
+  planning_start_date: 2025-05-15
+  planning_end_date: 2025-05-15
+  design_start_date: 2025-05-15
+  design_end_date: 2025-05-15
+  development_start_date: 2025-05-15
+  development_end_date: 2025-05-15
+  planning_user_id: 1
+  design_user_id: 1
+  development_user_id: 1
+  status: 1
+
+two:
+  customer_name: MyString
+  sales_office: MyString
+  sales_representative: MyString
+  request_type: 1
+  request_content: 1
+  order_date: 2025-05-15
+  due_date: 2025-05-15
+  revenue: 1
+  cost: 1
+  profit: 1
+  remarks: MyText
+  attachments: MyString
+  user: two
+  assigned_person: MyString
+  planning_start_date: 2025-05-15
+  planning_end_date: 2025-05-15
+  design_start_date: 2025-05-15
+  design_end_date: 2025-05-15
+  development_start_date: 2025-05-15
+  development_end_date: 2025-05-15
+  planning_user_id: 1
+  design_user_id: 1
+  development_user_id: 1
+  status: 1
