@@ -7,7 +7,8 @@
   <div class="login-form-container">
     <h1 class="page-title text-center mb-4">ログインページ</h1>
 
-    <%= form_with model: resource, as: resource_name, url: session_path(resource_name), local: true do |f| %>
+    <%= form_with model: resource, as: resource_name, url: session_path(resource_name), local: true, data: { turbo: false } do |f| %>
+
       <div class="mb-3">
         <%= f.label :email, "メールアドレス", class: "form-label" %>
         <%= f.email_field :email, autofocus: true, class: "form-control" %>
