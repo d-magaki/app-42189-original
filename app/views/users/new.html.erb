@@ -24,12 +24,18 @@
 
     <div class="mb-3">
       <%= f.label :department, "部署" %>
-      <%= f.select :department, User.departments.keys.map { |k| [k, k] }, {}, class: "form-select" %>
+      <%= f.select :department,
+            User.departments.keys.map { |k| [t("enums.department.#{k}"), k] },
+            {},
+            class: "form-select" %>
     </div>
 
     <div class="mb-3">
       <%= f.label :role, "権限" %>
-      <%= f.select :role, User.roles.keys.map { |r| [r, r] }, {}, class: "form-select" %>
+      <%= f.select :role,
+            User.roles.keys.map { |r| [t("enums.role.#{r}"), r] },
+            {},
+            class: "form-select" %>
     </div>
 
     <div class="mb-3">

@@ -4,10 +4,7 @@
   <div class="table-responsive">
     <table id="projects-table" class="table table-striped">
       <thead>
-        <tr>
-          <th>項目</th>
-          <th>入力内容</th>
-        </tr>
+        <tr><th>項目</th><th>入力内容</th></tr>
       </thead>
       <tbody>
         <tr><th>顧客名</th><td><%= form.text_field :customer_name, class: "form-control" %></td></tr>
@@ -18,12 +15,26 @@
         <tr><th>受注日</th><td><%= form.date_field :order_date, class: "form-control" %></td></tr>
         <tr><th>納期</th><td><%= form.date_field :due_date, class: "form-control" %></td></tr>
 
-        <tr>
-          <th>添付資料</th>
+        <% if current_user.admin? %>
+          <tr>
+            <th>売上</th>
+            <td><%= form.number_field :revenue, class: "form-control", step: 1000, id: "revenue" %></td>
+          </tr>
+          <tr>
+            <th>コスト</th>
+            <td><%= form.number_field :cost, class: "form-control", step: 1000, id: "cost" %></td>
+          </tr>
+          <tr>
+            <th>利益</th>
+            <td><%= form.number_field :profit, class: "form-control", step: 1000, id: "profit" %></td>
+          </tr>
+        <% end %>
+
+        <tr><th>添付資料</th>
           <td>
             <%= form.file_field :attachments, multiple: true, class: "form-control" %>
             <% if @project.attachments.attached? %>
-              <p>添付済みファイル: ※削除したい場合はチェックを付けて更新</p>
+              <p>添付済みファイル（削除する場合はチェック）</p>
               <% @project.attachments.each do |attachment| %>
                 <%= link_to attachment.filename.to_s, rails_blob_path(attachment, disposition: "inline"), target: "_blank" %>
                 <%= check_box_tag "remove_attachments[]", attachment.id %><br>
@@ -39,43 +50,40 @@
         <tr><th>社員ID</th>
           <td>
             <%= text_field_tag :employee_id, @project.planning_user&.employee_id || @project.design_user&.employee_id || @project.development_user&.employee_id, class: "form-control", id: "employee-id-input" %>
-
             <%= hidden_field_tag "project[planning_user_id]", @project.planning_user_id, id: "planning-user-id" %>
             <%= hidden_field_tag "project[design_user_id]", @project.design_user_id, id: "design-user-id" %>
             <%= hidden_field_tag "project[development_user_id]", @project.development_user_id, id: "development-user-id" %>
           </td>
         </tr>
 
-
-        <% if current_user.管理者? || current_user.department == "企画部" %>
+        <% if current_user.admin? || current_user.planning? %>
           <tr><th>企画担当者</th><td id="planning-user-name"><%= @project.planning_user&.user_name || "未設定" %></td></tr>
-        <% end %>
-
-        <% if current_user.管理者? || current_user.department == "情報設計部" %>
-          <tr><th>設計担当者</th><td id="design-user-name"><%= @project.design_user&.user_name || "未設定" %></td></tr>
-        <% end %>
-
-        <% if current_user.管理者? || current_user.department == "開発部" %>
-          <tr><th>開発担当者</th><td id="development-user-name"><%= @project.development_user&.user_name || "未設定" %></td></tr>
-        <% end %>
-
-        <% if current_user.管理者? %>
-          <tr><th>権限</th><td id="user-role-display"></td></tr>
-        <% end %>
-
-        <% if current_user.管理者? || current_user.department == "企画部" %>
           <tr><th>企画開始日</th><td><%= form.date_field :planning_start_date, class: "form-control" %></td></tr>
           <tr><th>企画完了日</th><td><%= form.date_field :planning_end_date, class: "form-control" %></td></tr>
         <% end %>
 
-        <% if current_user.管理者? || current_user.department == "情報設計部" %>
+        <% if current_user.admin? || current_user.design? %>
+          <tr><th>設計担当者</th><td id="design-user-name"><%= @project.design_user&.user_name || "未設定" %></td></tr>
           <tr><th>設計開始日</th><td><%= form.date_field :design_start_date, class: "form-control" %></td></tr>
           <tr><th>設計完了日</th><td><%= form.date_field :design_end_date, class: "form-control" %></td></tr>
         <% end %>
 
-        <% if current_user.管理者? || current_user.department == "開発部" %>
+        <% if current_user.admin? || current_user.development? %>
+          <tr><th>開発担当者</th><td id="development-user-name"><%= @project.development_user&.user_name || "未設定" %></td></tr>
           <tr><th>開発開始日</th><td><%= form.date_field :development_start_date, class: "form-control" %></td></tr>
           <tr><th>開発完了日</th><td><%= form.date_field :development_end_date, class: "form-control" %></td></tr>
+        <% end %>
+
+        <% if current_user.admin? %>
+          <tr><th>権限</th><td id="user-role-display">
+            <% if [@project.planning_user, @project.design_user, @project.development_user].compact.any?(&:admin?) %>
+              管理者
+            <% elsif [@project.planning_user, @project.design_user, @project.development_user].any? %>
+              一般社員
+            <% else %>
+              未設定
+            <% end %>
+          </td></tr>
         <% end %>
 
         <tr><th>状態</th><td><%= form.select :status, Project.statuses.keys.map { |status| [status.humanize, status] }, {}, class: "form-control" %></td></tr>
@@ -88,3 +96,29 @@
     <%= link_to "キャンセル", project_path(@project), class: "btn btn-secondary btn-lg" %>
   </div>
 <% end %>
+
+<script>
+document.addEventListener("turbo:load", () => {
+  const revenue = document.getElementById("revenue");
+  const cost = document.getElementById("cost");
+  const profit = document.getElementById("profit");
+
+  if (revenue && cost && profit) {
+    const updateProfit = () => {
+      const r = parseInt(revenue.value) || 0;
+      const c = parseInt(cost.value) || 0;
+      profit.value = r - c;
+    };
+
+    const updateRevenue = () => {
+      const c = parseInt(cost.value) || 0;
+      const p = parseInt(profit.value) || 0;
+      revenue.value = c + p;
+    };
+
+    revenue.addEventListener("input", updateProfit);
+    cost.addEventListener("input", updateProfit);
+    profit.addEventListener("input", updateRevenue);
+  }
+});
+</script>

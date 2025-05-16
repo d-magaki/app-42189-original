@@ -5,7 +5,7 @@
   </div>
 
   <div class="login-form-container">
-    <h1 class="page-title text-center mb-4">ログイン</h1>
+    <h1 class="page-title text-center mb-4">ログインページ</h1>
 
     <%= form_with model: resource, as: resource_name, url: session_path(resource_name), local: true do |f| %>
       <div class="mb-3">
@@ -23,7 +23,7 @@
         <%= f.label :remember_me, "ログイン状態を保持", class: "form-check-label" %>
       </div>
 
-      <%= f.submit "ログイン", class: "btn btn-primary w-100" %>
+      <%= f.submit "ログイン", class: "btn btn-primary btn-sm d-block mx-auto w-30 px-4" %>
     <% end %>
   </div>
 

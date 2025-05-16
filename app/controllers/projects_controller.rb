@@ -37,11 +37,12 @@ class ProjectsController < ApplicationController
 
   def create
     @project = Project.new(project_params)
+    @project.user = current_user # ← ここがポイント
 
     if @project.save
-      redirect_to projects_path, notice: "案件を登録しました！"
+      redirect_to @project, notice: '案件を登録しました。'
     else
-      render :new
+      render :new, status: :unprocessable_entity # ← ここもポイント
     end
   end
 
@@ -86,61 +87,61 @@ class ProjectsController < ApplicationController
     end
   end
 
-  def import
-    file = params[:file]
-    if file.blank?
-      redirect_to projects_path, alert: "ファイルを選択してください。" and return
-    end
+def import
+  file = params[:file]
+  if file.blank?
+    redirect_to projects_path, alert: "ファイルを選択してください。" and return
+  end
+
+  begin
+    spreadsheet = Roo::Spreadsheet.open(file.path)
+  rescue => e
+    redirect_to projects_path, alert: "ファイルの解析に失敗しました。" and return
+  end
+
+  header = spreadsheet.row(1)
+  (2..spreadsheet.last_row).each do |i|
+    row = Hash[[header, spreadsheet.row(i)].transpose]
 
     begin
-      spreadsheet = Roo::Spreadsheet.open(file.path)
+      status_map = { "未着手" => 0, "進行中" => 1, "完了" => 2 }
+      request_type_list = ["新規依頼", "修正依頼", "追加依頼", "バグ修正", "その他＿依頼"]
+      request_content_list = ["WEBアプリ制作", "WEBデザイン制作", "スマホアプリ制作", "システム構築", "データ解析", "その他＿内容"]
+
+      request_type = request_type_list.include?(row["依頼種別"]) ? row["依頼種別"] : "その他＿依頼"
+      request_content = request_content_list.include?(row["依頼内容"]) ? row["依頼内容"] : "その他＿内容"
+      status = status_map[row["状態"]] || 0
+
+      Project.create!(
+        customer_name: row["顧客名"],
+        sales_office: row["営業拠点"],
+        sales_representative: row["営業担当"],
+        request_type: request_type,
+        request_content: request_content,
+        order_date: row["受注日"],
+        due_date: row["納期"],
+        revenue: row["売上"].to_i,
+        cost: row["コスト"].to_i,
+        profit: row["利益"].to_i,
+        remarks: row["備考"],
+        status: status,
+        user_id: current_user.id,
+        planning_start_date: row["企画開始日"],
+        planning_end_date: row["企画完了日"],
+        design_start_date: row["設計開始日"],
+        design_end_date: row["設計完了日"],
+        development_start_date: row["開発開始日"],
+        development_end_date: row["開発完了日"]
+      )
+
     rescue => e
-      redirect_to projects_path, alert: "ファイルの解析に失敗しました。" and return
+      Rails.logger.error "⚠️ インポートエラー（行#{i}）: #{e.message}"
     end
-
-    header = spreadsheet.row(1)
-    (2..spreadsheet.last_row).each do |i|
-      row = Hash[[header, spreadsheet.row(i)].transpose]
-
-      user = User.find_by(employee_id: row["社員ID"])
-      status_value = { "未着手" => 0, "進行中" => 1, "完了" => 2 }[row["状態"]] || 0
-
-      valid_request_types = ["新規依頼", "修正依頼", "追加依頼", "バグ修正", "その他＿依頼"]
-      valid_request_contents = ["WEBアプリ制作", "WEBデザイン制作", "スマホアプリ制作", "システム構築", "データ解析", "その他＿内容"]
-
-      request_type = valid_request_types.include?(row["依頼種別"]) ? row["依頼種別"] : "その他＿依頼"
-      request_content = valid_request_contents.include?(row["依頼内容"]) ? row["依頼内容"] : "その他＿内容"
-
-      begin
-        Project.create!(
-          customer_name: row["顧客名"],
-          sales_office: row["営業拠点"],
-          sales_representative: row["営業担当"],
-          request_type: request_type,
-          request_content: request_content,
-          order_date: row["受注日"].to_s,
-          due_date: row["納期"].to_s,
-          revenue: row["売上"].to_i,
-          cost: row["コスト"].to_i,
-          profit: row["利益"].to_i,
-          remarks: row["備考"],
-          user_id: user&.id,
-          assigned_person: row["担当社員名"],
-          planning_start_date: row["企画開始日"].to_s,
-          planning_end_date: row["企画完了日"].to_s,
-          design_start_date: row["設計開始日"].to_s,
-          design_end_date: row["設計完了日"].to_s,
-          development_start_date: row["開発開始日"].to_s,
-          development_end_date: row["開発完了日"].to_s,
-          status: status_value
-        )
-      rescue => e
-        Rails.logger.error "⚠️ インポートエラー（行#{i}）: #{e.message}"
-      end
-    end
-
-    redirect_to projects_path, notice: "案件データをインポートしました！"
   end
+
+  redirect_to projects_path, notice: "案件データをインポートしました！"
+end
+
 
   def analysis
     @count_by_status = Project.group(:status).count

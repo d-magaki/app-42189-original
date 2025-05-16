@@ -21,8 +21,8 @@
           <tr>
             <td><%= user.employee_id %></td>
             <td><%= user.user_name %></td>
-            <td><%= user.department.present? ? user.department : "未設定" %></td>
-            <td><%= user.role %></td>
+            <td><%= t("enums.department.#{user.department}") if user.department.present? %></td>
+            <td><%= t("enums.role.#{user.role}") %></td>
             <td><%= user.email %></td>
             <td>
               <%= link_to "編集", edit_user_path(user), class: "btn btn-outline-primary btn-sm me-2" %>

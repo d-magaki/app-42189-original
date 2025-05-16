@@ -25,4 +25,10 @@ class Project < ApplicationRecord
     データ解析: 4,
     その他＿内容: 5
   }
+
+  validates :customer_name, :sales_office, :sales_representative,
+            :request_type, :request_content, :order_date, :due_date,
+            :status, presence: true
+
+  validates :revenue, :cost, :profit, numericality: { allow_nil: true }
 end

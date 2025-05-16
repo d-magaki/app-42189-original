@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>App42189Original</title>
+    <title>Progress Hub</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-
-    <!-- Importmap方式でJSを読み込む -->
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-light <%= 'devise-page' if devise_controller? %>">
+  <body class="bg-light d-flex flex-column min-vh-100 <%= 'devise-page' if devise_controller? %>">
     <header class="navbar navbar-expand-lg navbar-dark bg-dark px-4 mb-4 justify-content-between">
       <div class="d-flex align-items-center gap-3">
         <%= link_to "業務管理システム", root_path, class: "navbar-brand mb-0" %>
@@ -34,22 +32,17 @@
       </div>
     </header>
 
-    <main class="container">
-      <%# flash notice を消したいなら削除、中央表示したいなら以下 %>
-      <% unless (devise_controller? && action_name == "new") || (controller_name == "home" && action_name == "index") %>
-        <% if notice.present? %>
-          <div class="text-center text-success fw-bold mt-3"><%= notice %></div>
-        <% end %>
-      <% end %>
-      <% unless (devise_controller? && action_name == "new") || (controller_name == "home" && action_name == "index") %>
-        <% if alert.present? %>
-          <div class="text-center text-danger fw-bold mt-3"><%= alert %></div>
-        <% end %>
+    <main class="container flex-grow-1">
+      <% flash.each do |key, message| %>
+        <% next if message.include?("Translation missing") %>
+        <div class="text-center fw-bold mt-3 <%= key == 'notice' ? 'text-success' : 'text-danger' %>">
+          <%= message %>
+        </div>
       <% end %>
 
-  <%= yield %>
-</main>
-    <!-- フッター -->
+      <%= yield %>
+    </main>
+
     <footer class="text-center mt-5 py-3 text-muted">
       &copy; <%= Time.current.year %> 社内業務管理システム
     </footer>

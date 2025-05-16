@@ -53,7 +53,7 @@ class UsersController < ApplicationController
       render json: {
         id: user.id,
         user_name: user.user_name,
-        department: user.department,  # ← enumで"企画部"などの文字列を返す
+        department: user.department,
         email: user.email,
         role: user.role
       }
@@ -72,6 +72,6 @@ class UsersController < ApplicationController
   end
 
   def admin_only
-    redirect_to root_path, alert: "アクセス権限がありません" unless current_user&.role == 1
+    redirect_to root_path, alert: "アクセス権限がありません" unless current_user&.role == "管理者"
   end
 end

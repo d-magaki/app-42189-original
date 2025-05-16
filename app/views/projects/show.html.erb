@@ -18,7 +18,7 @@
         <tr><th>受注日</th><td><%= @project.order_date %></td></tr>
         <tr><th>納期</th><td><%= @project.due_date %></td></tr>
 
-        <% if current_user.管理者? %>
+        <% if current_user.admin? %>
           <tr><th>売上</th><td><%= number_with_delimiter(@project.revenue) %> 円</td></tr>
           <tr><th>コスト</th><td><%= number_with_delimiter(@project.cost) %> 円</td></tr>
           <tr><th>利益</th><td><%= number_with_delimiter(@project.profit) %> 円</td></tr>
@@ -39,36 +39,34 @@
           </td>
         </tr>
 
-        <% if current_user.管理者? || current_user.department == "企画部" %>
+        <% if current_user.admin? || current_user.planning? %>
           <tr><th>企画担当者</th><td><%= @project.planning_user&.user_name || "未設定" %></td></tr>
           <tr><th>企画開始日</th><td><%= @project.planning_start_date %></td></tr>
           <tr><th>企画完了日</th><td><%= @project.planning_end_date %></td></tr>
         <% end %>
 
-        <% if current_user.管理者? || current_user.department == "情報設計部" %>
+        <% if current_user.admin? || current_user.design? %>
           <tr><th>設計担当者</th><td><%= @project.design_user&.user_name || "未設定" %></td></tr>
           <tr><th>設計開始日</th><td><%= @project.design_start_date %></td></tr>
           <tr><th>設計完了日</th><td><%= @project.design_end_date %></td></tr>
         <% end %>
 
-        <% if current_user.管理者? || current_user.department == "開発部" %>
+        <% if current_user.admin? || current_user.development? %>
           <tr><th>開発担当者</th><td><%= @project.development_user&.user_name || "未設定" %></td></tr>
           <tr><th>開発開始日</th><td><%= @project.development_start_date %></td></tr>
           <tr><th>開発完了日</th><td><%= @project.development_end_date %></td></tr>
         <% end %>
 
-        <% if current_user.管理者? %>
+        <% if current_user.admin? %>
           <tr><th>権限</th>
             <td>
-              <%=
-                if @project.planning_user&.role == 1 || @project.design_user&.role == 1 || @project.development_user&.role == 1
-                  "管理者"
-                elsif @project.planning_user || @project.design_user || @project.development_user
-                  "一般社員"
-                else
-                  "未設定"
-                end
-              %>
+        <% if @project.planning_user&.admin? || @project.design_user&.admin? || @project.development_user&.admin? %>
+          管理者
+        <% elsif @project.planning_user || @project.design_user || @project.development_user %>
+          一般社員
+        <% else %>
+          未設定
+        <% end %>
             </td>
           </tr>
         <% end %>
@@ -82,7 +80,7 @@
 <div class="actions">
   <%= link_to "編集する", edit_project_path(@project), class: "btn btn-primary btn-lg" %>
 
-  <% if current_user.管理者? %>
+  <% if current_user.admin? %>
     <%= button_to "削除", project_path(@project), method: :delete, data: { confirm: "本当に削除しますか？", turbo: false }, class: "btn btn-danger btn-lg" %>
   <% end %>
 

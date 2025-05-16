@@ -1,6 +1,6 @@
 module ProjectsHelper
   def should_show_in_list?(project, user, filter)
-    return true if user.管理者?
+    return true if user.admin?
     filter ||= "in_progress"
 
     key = department_key(user.department)
@@ -9,9 +9,16 @@ module ProjectsHelper
     start_date = project.send("#{key}_start_date")
     end_date   = project.send("#{key}_end_date")
 
-    return false if end_date.present?
-
-    filter == "unstarted" ? start_date.nil? : start_date.present?
+    case filter
+    when "unstarted"
+      start_date.nil? && end_date.nil?
+    when "in_progress"
+      start_date.present? && end_date.nil?
+    when "all"
+      true
+    else
+      false
+    end
   end
 
   def project_department(project)
