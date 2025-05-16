@@ -78,3 +78,7 @@ gem "chartkick"
 gem "groupdate"
 gem "bootstrap", "~> 5.3.0"
 gem "sassc-rails", "~> 2.1"
+
+group :production do
+  gem 'pg'
+end
