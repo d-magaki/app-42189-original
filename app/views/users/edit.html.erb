@@ -22,14 +22,21 @@
           <tr>
             <th>部署</th>
             <td>
-              <%= f.select :department, User.departments.keys.map { |k| [k, k] }, {}, class: "form-select" %>
+              <%= f.select :department,
+                    User.departments.keys.map { |k| [t("enums.department.#{k}"), k] },
+                    {},
+                    class: "form-select" %>
             </td>
           </tr>
           <tr>
             <th>権限</th>
             <td>
-              <%= f.select :role, User.roles.keys.map { |r| [r, r] }, {}, class: "form-select" %>
-            </tr>
+              <%= f.select :role,
+                    User.roles.keys.map { |r| [t("enums.role.#{r}"), r] },
+                    {},
+                    class: "form-select" %>
+            </td>
+          </tr>
           <tr>
             <th>Email</th>
             <td><%= f.email_field :email, class: "form-control" %></td>

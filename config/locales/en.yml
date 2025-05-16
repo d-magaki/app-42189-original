@@ -29,3 +29,28 @@
 
 en:
   hello: "Hello world"
+
+ja:
+  enums:
+    department:
+      planning: 企画部
+      design: 情報設計部
+      development: 開発部
+    role:
+      admin: 管理者
+      employee: 一般社員
+
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            employee_id:
+              blank: "社員IDを入力してください"
+              taken: "この社員IDはすでに使われています"
+            user_name:
+              blank: "氏名を入力してください"
+            department:
+              blank: "部署を選択してください"
+            role:
+              blank: "権限を選択してください"

@@ -1,17 +1,25 @@
 class User < ApplicationRecord
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
   has_many :projects, dependent: :destroy
 
   enum department: {
-    企画部: 0,
-    情報設計部: 1,
-    開発部: 2
+    planning: 0,
+    design: 1,
+    development: 2
   }
 
   enum role: {
-    一般社員: 0,
-    管理者: 1
+    employee: 0,
+    admin: 1
   }
+
+  # バリデーション
+  validates :employee_id, presence: true, uniqueness: true
+  validates :user_name, :department, :role, presence: true
 end

@@ -8,13 +8,13 @@
     <p class="top-page-user-info">ログイン：ユーザー　<%= current_user.user_name %></p>
 
     <nav class="top-page-nav">
-      <% if current_user.管理者? %>
+      <% if current_user.admin? %>
         <%= link_to "ユーザー管理", users_path, class: "btn btn-outline-primary me-2" %>
       <% end %>
 
       <%= link_to "案件一覧", projects_path, class: "btn btn-outline-primary me-2" %>
 
-      <% if current_user.管理者? %>
+      <% if current_user.admin? %>
         <%= link_to "分析", analytics_path, class: "btn btn-outline-primary me-2" %>
       <% end %>
 
