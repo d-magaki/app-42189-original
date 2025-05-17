@@ -17,19 +17,23 @@
 
         <% if user_signed_in? %>
           <span class="logged-in-user text-white small">
-            ログイン：<%= "管理者　" if current_user.role == "管理者" %><%= current_user.user_name %>
+            ログイン：<%= "管理者　" if current_user.role == "admin" %><%= current_user.user_name %>
           </span>
         <% end %>
       </div>
 
-      <div class="d-flex gap-2">
-        <% if user_signed_in? %>
-          <%= link_to "トップページ", root_path, class: "btn btn-outline-light btn-sm" %>
+      <% if user_signed_in? %>
+        <div class="d-flex gap-2">
+          <% unless controller_name == "home" && action_name == "index" %>
+            <%= link_to "トップページ", root_path, class: "btn btn-outline-light btn-sm" %>
+          <% end %>
           <%= link_to "ログアウト", destroy_user_session_path, method: :delete, class: "btn btn-outline-light btn-sm" %>
-        <% else %>
+        </div>
+      <% elsif !devise_controller? || action_name != "new" %>
+        <div class="d-flex gap-2">
           <%= link_to "ログイン", new_user_session_path, class: "btn btn-outline-light btn-sm" %>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
     </header>
 
     <main class="container flex-grow-1">
