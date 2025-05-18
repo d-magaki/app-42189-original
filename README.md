@@ -1,170 +1,185 @@
-## アプリケーション名
-"ProgressHub"（プログレスハブ）
-→「Progress（進捗）」＋「Hub（ハブ・集約地点）」の組み合わせで、進捗を一元管理するイメージ
+# ProgressHub（プログレスハブ）
+
+「Progress（進捗）」＋「Hub（集約地点）」を意味する業務進行管理システム
+
+---
 
 ## アプリケーション概要
-ProgressHubは、複数の部署がバラバラに管理している進捗や実績を、一つのシステムでまとめて管理できるアプリです。リアルタイムで情報を更新・共有できるため、報告の手間を削減し、業務の効率を向上させます。管理者はダッシュボードで全体の状況を一目で把握でき、担当者は簡単にデータを登録・編集できます。
 
-## URL
-https://◎◎◎◎.onrender.com
-br※デプロイ済みのURLを記載。デプロイが済んでいない場合は、デプロイが完了次第記載すること。
+ProgressHub は、複数部署の進捗・実績・担当情報を一元管理できる業務支援システムです。  
+管理者は各案件の進行状況をリアルタイムに把握でき、部署担当者は自分の担当分のみを効率的に処理できます。
 
-## テスト用アカウント
-テスト用Email：test@test.com
-brテスト用Password：aaa123
-br※ログイン機能等を実装した場合は、ログインに必要な情報を記載。
-br※またBasic認証等を設けている場合は、そのID/Passも記載すること。
+- 案件の進捗を部署ごとに段階管理（企画・設計・開発）  
+- 部署別UI・表示制御（役割に応じて表示項目が切り替わる）  
+- ActiveStorageを使ったファイル添付・削除  
+- Chart.jsによる分析機能（グラフ表示）  
+- ロール別ログイン・管理者用ユーザー管理
 
-## 利用方法
-1. URLにアクセスし、ヘッダー右上の「ログイン」ボタンからログイン画面に移動します。
-2. テスト用アカウントを使用しログインします。
-3. トップページのヘッダー右上の「投稿する」ボタンから新規呟きを投稿します。
-4. 投稿内容には画像1枚と文章を含めることができます。
-5. 他のユーザーの呟きを閲覧し、コメントを残すことも可能です。
-6. 投稿した呟きはトップページから編集・削除できます。
+---
 
 ## アプリケーションを作成した背景
-PicTweetは、ユーザー同士が画像とテキストを使って簡単に感情やアイデアを共有できるプラットフォームです。
-br視覚的なコンテンツを通じてコミュニケーションを楽しむことを目指し、共通の趣味や関心を持つ人々がつながる場所を提供します。
 
-## 実装した機能についての画像やGIFおよびその説明
-|ページ|説明|
-|---|------------------|
-|[トップページのGIF](URL_TO_GIF)|トップページ　　　　　　　　　　　　　　　　　　　　　　|
-|[ユーザー機能のGIF](URL_TO_GIF)|ユーザー機能br・新規登録br・ログイン/ログアウトbr・マイページ|
-|[ツイート機能のGIF](URL_TO_GIF)|ツイート（呟き）機能br・投稿機能br・一覧機能br・詳細機能br・編集・削除機能|
-|[コメント機能のGIF](URL_TO_GIF)|コメント機能|
-|[検索機能のGIF](URL_TO_GIF)|検索機能|
+前職で、部門ごとに進捗管理が分散し、業務報告や確認に大きな手間がかかっていた経験から、  
+「部署ごとに必要な情報だけを見せつつ、全体は一元管理したい」という課題を解決するアプリケーションとして **ProgressHub** を開発しました。  
+**「情報共有・見える化・効率化」** を目的に、社内の業務DXを後押しすることを目指しています。
 
-## 実装予定の機能
-- リアルタイム通知機能
-- ユーザー同士のフォロー機能
-- お気に入りのツイートを保存する機能
-- 高度な検索フィルター機能
+---
 
-## データベース設計
-ER図を添付。
-brAIで作る場合は、googleアカウントがあれば使用できる「Vercel v0」がオススメです。
-img width="307" alt="Image" src="https://github.com/user-attachments/assets/f780ed7f-e22c-495f-ad7d-5add7f75e45f" /
+## URL
 
+🔗 https://app-42189-original.onrender.com  
+※ Render による本番環境にデプロイ済み
+
+---
+
+## テスト用アカウント
+
+| ロール           | メールアドレス             | パスワード     |
+|------------------|-----------------------------|----------------|
+| 管理者ユーザー   | `admin@example.com`         | `password123`  |
+| 企画担当         | `planner@example.com`       | `password123`  |
+| 設計担当         | `designer@example.com`      | `password123`  |
+| 開発担当         | `developer@example.com`     | `password123`  |
+
+---
+
+## 利用方法
+
+1. ログイン画面からテストユーザーでログイン  
+   ※管理者ユーザーと担当ユーザーで画面表示が変わります  
+2. トップページより各機能に遷移  
+3. ユーザー一覧・編集・削除（管理者のみ）  
+4. 案件の一覧・詳細・編集（部署ごとに表示制御、削除は管理者のみ）  
+5. 分析ページにて、案件の進行状況や依頼区分の割合などをグラフ表示（管理者のみ）
+
+---
+
+## 実装した機能の画像やGIF
+
+| 機能名                | 画像ファイル例 (クリックで表示)                                                     |
+|------------------------|--------------------------------------------------------------------------------------|
+| ログイン画面           | [![login](./screenshots/login.png)](./screenshots/login.png)                       |
+| トップページ           | [![home](./screenshots/home.png)](./screenshots/home.png)                          |
+| ユーザー一覧           | [![users](./screenshots/users.png)](./screenshots/users.png)                       |
+| 案件一覧（部署別UI）   | [![projects](./screenshots/projects.png)](./screenshots/projects.png)              |
+| 分析画面（チャート表示）| [![analytics](./screenshots/analytics_index.png)](./screenshots/analytics_index.)   |
+
+---
 
 ## 画面遷移図
-画面遷移図を添付。
-brAIで作る場合は、googleアカウントがあれば使用できる「Vercel v0」がオススメです。
-img width="509" alt="Image" src="https://github.com/user-attachments/assets/086ceb82-5286-4340-b4ff-014d621e4d26" /
 
+![画面遷移図](./画面遷移図20250513.png)
+
+---
+
+## ER図
+
+![ER図](./ER図20250513.png)
+
+---
+
+## 主な機能
+
+### ユーザー機能（Devise使用）
+
+- ログイン / ログアウト（全ユーザー）
+- ユーザー一覧・新規登録・編集・削除（管理者のみ）
+
+### 案件管理機能
+
+- 新規登録 / 削除（管理者のみ）
+- 編集 / 詳細確認
+- Excelなどのデータインポート（管理者のみ）
+- 担当部署別の進行状況表示（企画・設計・開発に応じて制御）
+- 添付ファイル（ActiveStorage）
+- 売上・コスト・利益の数値管理（管理者のみ）
+
+### 分析機能（管理者のみ）
+
+- 部署別・社員別の案件数（期間設定・XY軸組み合わせ可）
+- 納期までの日数別グラフ（期間設定可）
+- 依頼内容や依頼種別の割合表示（期間設定可）
+
+---
+
+## テスト用インポートデータ
+
+案件を一括登録するためのサンプルExcelファイルを同梱しています。  
+ファイルパス：`./sample_projects.xlsx`
+
+上記ファイルを使って、案件一覧画面の「インポート」ボタンから登録をお試しください。
+
+---
+
+## 工夫したポイント
+
+- **部署別UIの自動切り替え**  
+  ログインユーザーの部署に応じて、案件一覧の表示内容・編集可能項目が動的に変化するように実装。
+
+- **管理者と一般社員の明確な権限分離**  
+  ロールによって画面表示・機能（ユーザー管理・削除・分析など）を制御し、業務統制と操作性を両立。
+
+- **添付ファイル（ActiveStorage）対応**  
+  案件詳細でファイル添付＆削除が可能。PDFや画像もアップロード対応。
+
+- **Chart.jsによるグラフ分析**  
+  XY軸を動的に変更でき、納期・依頼内容などをグラフで視覚的に把握。
+
+- **Split.jsによる上下分割レイアウト**  
+  案件一覧と分析グラフを分割表示しながら同時閲覧できる画面構成。
+
+---
+
+## 今後の課題
+
+- 案件の完了アラート通知機能  
+- CSV / Excelエクスポート機能  
+- 管理者による承認フロー機能  
+- 社員スケジュールのカレンダー・チャート表示  
+- パフォーマンス最適化（N+1解消・インデックス強化）
+
+---
 
 ## 開発環境
-| 項目               | バージョン・サービス |
-|------------------|-----------------|
-| **言語**        | Ruby 3.2.0 |
-| **フレームワーク** | Ruby on Rails 7.1.5.1 |
-| **データベース**  | PostgreSQL 14.15（本番） / MySQL 8.0（開発） |
-| **フロントエンド** | HTML / CSS / JavaScript |
-| **認証機能**    | Devise |
-| **デプロイ環境** | Render |
-| **バージョン管理** | GitHub |
 
-Things you may want to cover:
+| 項目             | バージョン・サービス           |
+|------------------|------------------------------|
+| 言語              | Ruby 3.2.0                    |
+| フレームワーク     | Ruby on Rails 7.1.5.1         |
+| フロントエンド     | HTML / SCSS / JavaScript      |
+| ライブラリ         | Bootstrap / Chart.js / Split.js |
+| 認証機能           | Devise                        |
+| DB（開発）         | MySQL 8.0                     |
+| DB（本番）         | PostgreSQL 14                 |
+| デプロイ           | Render                        |
+| テスト             | RSpec / FactoryBot            |
+| 画像添付管理       | ActiveStorage                 |
+| バージョン管理     | Git / GitHub                  |
 
-* Ruby version
+---
 
-* System dependencies
+## ローカルでの実行方法
 
-* Configuration
+```bash
+# クローン
+git clone https://github.com/d-magaki/app-42189-original.git
 
-* Database creation
+# gemインストール
+bundle install
 
-* Database initialization
+# データベース作成・マイグレート・初期データ投入
+rails db:create
+rails db:migrate
+rails db:seed  # ※初回のみ実行
 
-* How to run the test suite
+# サーバ起動
+rails s
 
-* Services (job queues, cache servers, search engines, etc.)
+# 確認用URL
+http://localhost:3000
 
-* Deployment instructions
+```
 
-* ...
+## 制作期間
 
-DB設計
-users テーブル（社員情報）
-| Column             | Type     | Options                   | 備考                                   |
-|--------------------|----------|---------------------------|----------------------------------------|
-| id                 | integer  | primary_key               | 社員の一意識別子                        |
-| employee_id        | string   | null: false, unique: true | 社員ID（一意の識別子）                  |
-| email              | string   | null: false, unique: true | メールアドレス                         |
-| encrypted_password | string   | null: false               | パスワード（ハッシュ化）                |
-| user_name          | string   | null: false               | 社員名                                 |
-| department         | string   | null: false               | 所属部署                               |
-| role               | integer  | null: false, default: 0   | 権限（0:一般社員, 1:管理者）            |
-| created_at         | datetime |                           | 作成日時                               |
-| updated_at         | datetime |                           | 更新日時                               |
-
-
-モデルイメージ
-class User < ApplicationRecord
-  has_many :projects, foreign_key: :user_id, dependent: :destroy
-  has_many :planning_projects, class_name: "Project", foreign_key: :planning_user_id, dependent: :nullify
-  has_many :design_projects, class_name: "Project", foreign_key: :design_user_id, dependent: :nullify
-  has_many :development_projects, class_name: "Project", foreign_key: :development_user_id, dependent: :nullify
-
-  enum role: { 一般社員: 0, 管理者: 1 }
-end
-
-
-projects テーブル
-| Column                   | Type     | Options                        | 備考                                     |
-|--------------------------|----------|--------------------------------|------------------------------------------|
-| id                       | integer  | primary_key                    | 案件の一意識別子                           |
-| customer_name            | string   | null: false                    | 顧客名                                    |
-| sales_office             | string   |                                | 営業拠点                                  |
-| sales_representative     | string   |                                | 営業担当                                  |
-| request_type             | integer  | null: false, default: 0        | ENUM管理（新規/修正/追加/バグ修正など）     |
-| request_content          | integer  | null: false, default: 0        | ENUM管理（WEBアプリ制作など）              |
-| order_date               | date     |                                | 受注日（カレンダー機能）                   |
-| due_date                 | date     |                                | 納期（カレンダー機能）                     |
-| revenue                  | integer  | default: 0                     | 売上（1000単位）                          |
-| cost                     | integer  | default: 0                     | コスト（1000単位）                        |
-| profit                   | integer  |                                | 売上 - コスト（自動計算）                  |
-| remarks                  | text     |                                | 備考                                     |
-| attachments              | string   |                                | 添付資料（Excel, Word, PNG, PDFなど）     |
-| user_id                  | integer  | null: false, foreign_key: true | 作成者（usersテーブルの外部キー）          |
-| assigned_person          | string   |                                | 担当者（社員ID入力時に自動入力）           |
-| planning_start_date      | date     |                                | 企画部の作業開始日                        |
-| planning_end_date        | date     |                                | 企画部の作業完了日                        |
-| design_start_date        | date     |                                | 情報設計部の作業開始日                     |
-| design_end_date          | date     |                                | 情報設計部の作業完了日                     |
-| development_start_date   | date     |                                | 開発部の作業開始日                         |
-| development_end_date     | date     |                                | 開発部の作業完了日                         |
-| planning_user_id         | integer  | foreign_key: true              | 企画担当者（usersテーブルの外部キー）       |
-| design_user_id           | integer  | foreign_key: true              | 設計担当者（usersテーブルの外部キー）       |
-| development_user_id      | integer  | foreign_key: true              | 開発担当者（usersテーブルの外部キー）       |
-| status                   | integer  | default: 0                     | 状態（0:未着手, 1:進行中, 2:完了）          |
-| created_at               | datetime |                                | 作成日時                                  |
-| updated_at               | datetime |                                | 更新日時                                  |
-
-
-モデルイメージ
-class Project < ApplicationRecord
-  belongs_to :user
-  belongs_to :planning_user, class_name: "User", foreign_key: :planning_user_id, optional: true
-  belongs_to :design_user, class_name: "User", foreign_key: :design_user_id, optional: true
-  belongs_to :development_user, class_name: "User", foreign_key: :development_user_id, optional: true
-
-  validates :customer_name, presence: true
-  validates :request_type, presence: true
-  validates :request_content, presence: true
-  validates :revenue, numericality: { greater_than_or_equal_to: 0 }
-  validates :cost, numericality: { greater_than_or_equal_to: 0 }
-
-  before_save :calculate_profit
-
-  enum status: { 未着手: 0, 進行中: 1, 完了: 2 }
-  enum request_type: { 新規: 0, 修正: 1, 追加: 2, バグ修正: 3 }
-  enum request_content: { WEBアプリ制作: 0, サイト改修: 1, その他: 2 }
-
-  private
-
-  def calculate_profit
-    self.profit = self.revenue - self.cost
-  end
-end
+約2週間
