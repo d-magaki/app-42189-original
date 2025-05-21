@@ -1,35 +1,53 @@
 class ProjectsController < ApplicationController
+  before_action :basic_auth
   before_action :set_project, only: [:show, :edit, :update, :destroy]
+  include ProjectsHelper
   require 'roo'
 
   def index
-    @filter = params[:filter].presence || "in_progress"
+    using_custom_filter = current_user.admin? &&
+      (params[:department].present? || params[:status].present? || params[:assignee_name].present?)
+
+    @filter = using_custom_filter ? nil : (params[:filter].presence || "in_progress")
     @projects = Project.includes(:planning_user, :design_user, :development_user).all
 
-    # 各工程の担当者を合算した件数（部署関係なく）
-    @user_project_counts = User.all.index_with do |user|
-      Project.where(
-        "planning_user_id = :id OR design_user_id = :id OR development_user_id = :id",
-        id: user.id
-      ).count
-    end
+    if current_user.admin?
+      if params[:assignee_name].present?
+        name = params[:assignee_name]
+        @projects = @projects.select do |p|
+          [p.planning_user, p.design_user, p.development_user].compact.any? { |u| u.user_name.include?(name) }
+        end
+      end
 
-    # 未着手の案件だけを担当者別にカウント
-    @employee_tasks = User.includes(:projects).each_with_object({}) do |user, hash|
-      count = Project.where(
-        "(planning_user_id = :id AND planning_start_date IS NULL AND planning_end_date IS NULL) OR
-        (design_user_id = :id AND design_start_date IS NULL AND design_end_date IS NULL) OR
-        (development_user_id = :id AND development_start_date IS NULL AND development_end_date IS NULL)",
-        id: user.id
-      ).count
-      hash[user] = count
+      if params[:status].present?
+        @projects = @projects.select { |p| p.status == params[:status] }
+      end
+
+      if params[:department].present?
+        dept = params[:department]
+        @projects = @projects.select do |p|
+          user = p.send("#{dept}_user")
+          user.present? && user.department == dept
+        end
+      end
+    else
+      users_scope = User.where(department: current_user.department, role: :employee)
+      dept_key = department_key(current_user.department)
+
+      @employee_tasks = users_scope.each_with_object({}) do |user, hash|
+        count = @projects.count do |project|
+          assigned_user_id = project.send("#{dept_key}_user_id")
+          start_date = project.send("#{dept_key}_start_date")
+          end_date = project.send("#{dept_key}_end_date")
+          assigned_user_id == user.id && start_date.present? && end_date.nil?
+        end
+        hash[user] = count if count > 0
+      end
     end
   end
 
 
-  def show
-    @project = Project.find(params[:id])
-  end
+  def show; end
 
   def new
     @project = Project.new
@@ -37,22 +55,18 @@ class ProjectsController < ApplicationController
 
   def create
     @project = Project.new(project_params)
-    @project.user = current_user # ← ここがポイント
+    @project.user = current_user
 
     if @project.save
       redirect_to @project, notice: '案件を登録しました。'
     else
-      render :new, status: :unprocessable_entity # ← ここもポイント
+      render :new, status: :unprocessable_entity
     end
   end
 
-  def edit
-    @project = Project.find(params[:id])
-  end
+  def edit; end
 
   def update
-    @project = Project.find(params[:id])
-
     if params[:remove_attachments].present?
       params[:remove_attachments].each do |id|
         attachment = @project.attachments.find_by(id: id)
@@ -64,11 +78,11 @@ class ProjectsController < ApplicationController
       @project.attachments.attach(params[:project][:attachments])
     end
 
-    @project.planning_user_id = params[:project][:planning_user_id].presence
-    @project.design_user_id = params[:project][:design_user_id].presence
-    @project.development_user_id = params[:project][:development_user_id].presence
+    %i[planning_user_id design_user_id development_user_id].each do |key|
+      params[:project][key] = nil if params[:project][key].blank?
+    end
 
-    if @project.update(project_params.except(:attachments, :employee_id, :planning_user_id, :design_user_id, :development_user_id))
+    if @project.update(project_params.except(:attachments, :employee_id))
       redirect_to @project, notice: "案件を更新しました！"
     else
       logger.debug "❌ 更新失敗: #{@project.errors.full_messages}"
@@ -77,9 +91,7 @@ class ProjectsController < ApplicationController
   end
 
   def destroy
-    @project = Project.find(params[:id])
     @project.attachments.purge if @project.attachments.attached?
-
     if @project.destroy
       redirect_to projects_path, notice: "案件を削除しました！"
     else
@@ -87,23 +99,38 @@ class ProjectsController < ApplicationController
     end
   end
 
-def import
-  file = params[:file]
-  if file.blank?
-    redirect_to projects_path, alert: "ファイルを選択してください。" and return
+  def destroy_selected
+    if current_user.admin?
+      if params[:project_ids].present?
+        Project.where(id: params[:project_ids]).each do |project|
+          project.attachments.purge if project.attachments.attached?
+          project.destroy
+        end
+        redirect_to projects_path, notice: "選択した案件を削除しました。"
+      else
+        redirect_to projects_path, alert: "削除する案件を選択してください。"
+      end
+    else
+      redirect_to projects_path, alert: "権限がありません。"
+    end
   end
 
-  begin
-    spreadsheet = Roo::Spreadsheet.open(file.path)
-  rescue => e
-    redirect_to projects_path, alert: "ファイルの解析に失敗しました。" and return
-  end
-
-  header = spreadsheet.row(1)
-  (2..spreadsheet.last_row).each do |i|
-    row = Hash[[header, spreadsheet.row(i)].transpose]
+  def import
+    file = params[:file]
+    if file.blank?
+      redirect_to projects_path, alert: "ファイルを選択してください。" and return
+    end
 
     begin
+      spreadsheet = Roo::Spreadsheet.open(file.path)
+    rescue => e
+      redirect_to projects_path, alert: "ファイルの解析に失敗しました。" and return
+    end
+
+    header = spreadsheet.row(2)
+    (3..spreadsheet.last_row).each do |i|
+      row = Hash[[header, spreadsheet.row(i)].transpose]
+
       status_map = { "未着手" => 0, "進行中" => 1, "完了" => 2 }
       request_type_list = ["新規依頼", "修正依頼", "追加依頼", "バグ修正", "その他＿依頼"]
       request_content_list = ["WEBアプリ制作", "WEBデザイン制作", "スマホアプリ制作", "システム構築", "データ解析", "その他＿内容"]
@@ -112,7 +139,7 @@ def import
       request_content = request_content_list.include?(row["依頼内容"]) ? row["依頼内容"] : "その他＿内容"
       status = status_map[row["状態"]] || 0
 
-      Project.create!(
+      project = Project.new(
         customer_name: row["顧客名"],
         sales_office: row["営業拠点"],
         sales_representative: row["営業担当"],
@@ -131,41 +158,47 @@ def import
         design_start_date: row["設計開始日"],
         design_end_date: row["設計完了日"],
         development_start_date: row["開発開始日"],
-        development_end_date: row["開発完了日"]
+        development_end_date: row["開発完了日"],
+        planning_user_id: User.find_by(employee_id: row["企画ID"])&.id,
+        design_user_id: User.find_by(employee_id: row["設計ID"])&.id,
+        development_user_id: User.find_by(employee_id: row["開発ID"])&.id
       )
 
-    rescue => e
-      Rails.logger.error "⚠️ インポートエラー（行#{i}）: #{e.message}"
+      if project.save
+        Rails.logger.info "✅ インポート成功（行#{i}）: #{project.customer_name}"
+      else
+        Rails.logger.warn "⚠️ インポートエラー（行#{i}）: #{project.errors.full_messages.join(', ')}"
+      end
     end
+
+    redirect_to projects_path, notice: "案件データのインポート処理が完了しました。"
   end
-
-  redirect_to projects_path, notice: "案件データをインポートしました！"
-end
-
 
   def analysis
     @count_by_status = Project.group(:status).count
-
-    @count_by_month =
-      if params[:from].present? && params[:to].present?
-        from = Date.parse(params[:from]).beginning_of_day
-        to   = Date.parse(params[:to]).end_of_day
-        Project.where(created_at: from..to)
-               .group_by_month(:created_at, format: "%Y-%m")
-               .count
-      else
-        Project.group_by_month(:created_at, format: "%Y-%m").count
-      end
+    @count_by_month = if params[:from].present? && params[:to].present?
+      from = Date.parse(params[:from]).beginning_of_day
+      to = Date.parse(params[:to]).end_of_day
+      Project.where(created_at: from..to).group_by_month(:created_at, format: "%Y-%m").count
+    else
+      Project.group_by_month(:created_at, format: "%Y-%m").count
+    end
   end
 
   private
+
+  def basic_auth
+    authenticate_or_request_with_http_basic do |username, password|
+      username == ENV["BASIC_AUTH_USER"] && password == ENV["BASIC_AUTH_PASSWORD"]
+    end
+  end
 
   def set_project
     @project = Project.find(params[:id])
   end
 
   def project_params
-    params.require(:project).permit(
+    permitted = params.require(:project).permit(
       :customer_name, :sales_office, :sales_representative,
       :request_type, :request_content, :order_date, :due_date,
       :revenue, :cost, :profit, :remarks, :status,
@@ -176,14 +209,20 @@ end
       :planning_user_id, :design_user_id, :development_user_id,
       attachments: []
     )
+
+    %i[planning_user_id design_user_id development_user_id].each do |key|
+      permitted[key] = nil if permitted[key].blank?
+    end
+
+    permitted
   end
 
-  def dept_column(dept)
-    case dept
-    when "企画部" then "planning"
-    when "情報設計部" then "design"
-    when "開発部" then "development"
-    else "unknown"
+  def department_key(department)
+    case department
+    when "planning" then "planning"
+    when "design" then "design"
+    when "development" then "development"
+    else nil
     end
   end
 end

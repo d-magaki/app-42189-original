@@ -5,28 +5,49 @@ import "@hotwired/turbo-rails";
 import Split from "split.js";
 
 document.addEventListener("turbo:load", () => {
-  console.log("Turbo:load - ページ初期化開始");
-
-  const projectRows = document.querySelectorAll("#projects-table tbody tr");
-
-  // 上下分割
   const list = document.querySelector(".list-container");
   const chart = document.querySelector(".chart-container");
-  if (list && chart) {
+
+  if (list && chart && !list.classList.contains("split-initialized")) {
+    list.classList.add("split-initialized");
     Split([".list-container", ".chart-container"], {
       direction: "vertical",
-      gutterSize: 8,
       sizes: [60, 40],
-      minSize: [20, 20],
+      minSize: [100, 100],
+      gutterSize: 8,
     });
   }
 
-  // 社員ID → 担当者自動セット
-  const employeeInput = document.getElementById("employee-id-input");
-  if (employeeInput) {
-    employeeInput.addEventListener("change", () => {
-      const employeeId = employeeInput.value.trim();
-      if (!employeeId) return;
+  document.querySelectorAll("#projects-table tbody tr").forEach((row) => {
+    row.addEventListener("dblclick", () => {
+      const url = row.dataset.url;
+      if (url) window.location.href = url;
+    });
+  });
+
+  const selectAll = document.getElementById("select-all");
+  if (selectAll) {
+    selectAll.addEventListener("change", () => {
+      document.querySelectorAll("input[name='project_ids[]']").forEach(cb => {
+        cb.checked = selectAll.checked;
+      });
+    });
+  }
+
+  function setupEmployeeInput(inputId, expectedDepartment, hiddenId, nameId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    input.addEventListener("change", () => {
+      const employeeId = input.value.trim();
+      const hidden = document.getElementById(hiddenId);
+      const nameCell = document.getElementById(nameId);
+
+      if (!employeeId) {
+        if (hidden) hidden.value = "";
+        if (nameCell) nameCell.textContent = "未設定";
+        return;
+      }
 
       fetch(`/users/find_by_employee_id?employee_id=${employeeId}`)
         .then(response => {
@@ -34,99 +55,62 @@ document.addEventListener("turbo:load", () => {
           return response.json();
         })
         .then(data => {
-          ["planning", "design", "development"].forEach(key => {
-            document.getElementById(`${key}-user-id`).value = "";
-            const nameCell = document.getElementById(`${key}-user-name`);
-            if (nameCell) nameCell.textContent = "未設定";
-          });
-
-          const roleField = document.getElementById("user-role-display");
-          if (roleField) roleField.textContent = data.role === 1 ? "管理者" : "一般社員";
-
-          const map = {
-            "企画部": "planning",
-            "情報設計部": "design",
-            "開発部": "development"
+          const departmentLabel = {
+            planning: "企画部",
+            design: "情報設計部",
+            development: "開発部"
           };
-          const key = map[data.department];
-          if (key) {
-            document.getElementById(`${key}-user-id`).value = data.id;
-            const nameCell = document.getElementById(`${key}-user-name`);
-            if (nameCell) nameCell.textContent = data.user_name || "未設定";
+          if (expectedDepartment && data.department !== expectedDepartment) {
+            alert(`${departmentLabel[expectedDepartment]} に登録されている社員IDを入力してください。`);
+            input.value = "";
+            input.focus();
+            return;
           }
+          if (hidden) hidden.value = data.id;
+          if (nameCell) nameCell.textContent = data.user_name || "未設定";
         })
         .catch(error => {
           console.error("社員情報の取得に失敗:", error);
-          ["planning", "design", "development"].forEach(key => {
-            document.getElementById(`${key}-user-id`).value = "";
-            const nameCell = document.getElementById(`${key}-user-name`);
-            if (nameCell) nameCell.textContent = "未設定";
-          });
-          const roleField = document.getElementById("user-role-display");
-          if (roleField) roleField.textContent = "";
+          if (hidden) hidden.value = "";
+          if (nameCell) nameCell.textContent = "未設定";
         });
     });
   }
 
-  // フィルター状態管理
-  let activeDepartment = null;
-  let departmentFilterIncompleteOnly = false;
+  setupEmployeeInput("employee-id-planning", "planning", "planning-user-id", "planning-user-name");
+  setupEmployeeInput("employee-id-design", "design", "design-user-id", "design-user-name");
+  setupEmployeeInput("employee-id-development", "development", "development-user-id", "development-user-name");
 
-  function projectIsVisible(row) {
-    const dept = activeDepartment;
-    const isComplete = row.dataset.complete === "true";
-
-    if (!dept) return true;
-
-    const matchesDept =
-      (dept === "企画部" && row.dataset.planning === "true") ||
-      (dept === "情報設計部" && row.dataset.design === "true") ||
-      (dept === "開発部" && row.dataset.development === "true");
-
-    const matchesIncomplete = !departmentFilterIncompleteOnly || !isComplete;
-
-    return matchesDept && matchesIncomplete;
-  }
-
-  function applyFilters() {
-    projectRows.forEach(row => {
-      row.style.display = projectIsVisible(row) ? "" : "none";
-    });
-  }
-
-  // 社員別フィルター（全解除）
-  document.querySelectorAll(".employee-filter").forEach(row => {
+  document.querySelectorAll(".employee-filter-row").forEach((row) => {
     row.addEventListener("click", () => {
-      activeDepartment = null;
-      departmentFilterIncompleteOnly = false;
-      projectRows.forEach(row => row.style.display = "");
+      const userName = row.dataset.userName;
+      document.querySelectorAll("#projects-table tbody tr").forEach((tr) => {
+        const content = tr.textContent || "";
+        const isFilteredOut = tr.classList.contains("filtered-out");
+        tr.style.display = (!isFilteredOut && content.includes(userName)) ? "" : "none";
+      });
     });
   });
 
-  // 部署別フィルター（未完了案件のみ）
-  document.querySelectorAll(".department-filter").forEach(row => {
-    row.addEventListener("click", () => {
-      activeDepartment = (row.dataset.department || "").trim();
-      departmentFilterIncompleteOnly = true;
-      applyFilters();
-    });
-  });
-
-  // リセットボタン
   const resetButton = document.getElementById("reset-projects");
   if (resetButton) {
     resetButton.addEventListener("click", () => {
-      activeDepartment = null;
-      departmentFilterIncompleteOnly = false;
-      applyFilters();
+      document.querySelectorAll("#projects-table tbody tr").forEach((tr) => {
+        tr.style.display = "";
+      });
     });
   }
 
-  // ダブルクリックで詳細画面へ遷移
-  projectRows.forEach(row => {
-    row.addEventListener("dblclick", () => {
-      const url = row.dataset.url;
-      if (url) window.location.href = url;
+  const editForm = document.querySelector("form.edit-form");
+  if (editForm) {
+    editForm.addEventListener("submit", () => {
+      ["planning", "design", "development"].forEach((key) => {
+        const employeeInput = document.getElementById(`employee-id-${key}`);
+        const hiddenInput = document.getElementById(`${key}-user-id`);
+        if (employeeInput && hiddenInput && employeeInput.value.trim() === "") {
+          hiddenInput.value = "";
+        }
+      });
     });
-  });
+  }
 });
