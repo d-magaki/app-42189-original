@@ -53,7 +53,7 @@ class UsersController < ApplicationController
       render json: {
         id: user.id,
         user_name: user.user_name,
-        department: user.department,
+        department: user.department, # ← enumのキーをそのまま返す
         email: user.email,
         role: user.role
       }
@@ -69,9 +69,5 @@ class UsersController < ApplicationController
       :employee_id, :user_name, :department,
       :role, :email, :password, :password_confirmation
     )
-  end
-
-  def admin_only
-    redirect_to root_path, alert: "アクセス権限がありません" unless current_user&.role == "管理者"
   end
 end

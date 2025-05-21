@@ -24,7 +24,7 @@
           <tr><th>利益</th><td><%= number_with_delimiter(@project.profit) %> 円</td></tr>
         <% end %>
 
-        <tr><th>備考</th><td><%= @project.remarks %></td></tr>
+        <tr><th>備考</th><td><%= @project.remarks.presence || "なし" %></td></tr>
 
         <tr>
           <th>添付資料</th>
@@ -60,13 +60,13 @@
         <% if current_user.admin? %>
           <tr><th>権限</th>
             <td>
-        <% if @project.planning_user&.admin? || @project.design_user&.admin? || @project.development_user&.admin? %>
-          管理者
-        <% elsif @project.planning_user || @project.design_user || @project.development_user %>
-          一般社員
-        <% else %>
-          未設定
-        <% end %>
+              <% if @project.planning_user&.admin? || @project.design_user&.admin? || @project.development_user&.admin? %>
+                管理者
+              <% elsif @project.planning_user || @project.design_user || @project.development_user %>
+                一般社員
+              <% else %>
+                未設定
+              <% end %>
             </td>
           </tr>
         <% end %>

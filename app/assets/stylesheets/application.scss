@@ -223,3 +223,10 @@ body {
     height: 50px;
   }
 }
+
+/* ===============================
+   ✅ 一覧フィルター：非表示行
+=============================== */
+#projects-table tr.filtered-out {
+  display: none !important;
+}

@@ -16,18 +16,9 @@
         <tr><th>納期</th><td><%= form.date_field :due_date, class: "form-control" %></td></tr>
 
         <% if current_user.admin? %>
-          <tr>
-            <th>売上</th>
-            <td><%= form.number_field :revenue, class: "form-control", step: 1000, id: "revenue" %></td>
-          </tr>
-          <tr>
-            <th>コスト</th>
-            <td><%= form.number_field :cost, class: "form-control", step: 1000, id: "cost" %></td>
-          </tr>
-          <tr>
-            <th>利益</th>
-            <td><%= form.number_field :profit, class: "form-control", step: 1000, id: "profit" %></td>
-          </tr>
+          <tr><th>売上</th><td><%= form.number_field :revenue, class: "form-control", step: 1000, id: "revenue" %></td></tr>
+          <tr><th>コスト</th><td><%= form.number_field :cost, class: "form-control", step: 1000, id: "cost" %></td></tr>
+          <tr><th>利益</th><td><%= form.number_field :profit, class: "form-control", step: 1000, id: "profit" %></td></tr>
         <% end %>
 
         <tr><th>添付資料</th>
@@ -47,46 +38,41 @@
 
         <tr><th>備考</th><td><%= form.text_area :remarks, class: "form-control" %></td></tr>
 
-        <tr><th>社員ID</th>
-          <td>
-            <%= text_field_tag :employee_id, @project.planning_user&.employee_id || @project.design_user&.employee_id || @project.development_user&.employee_id, class: "form-control", id: "employee-id-input" %>
-            <%= hidden_field_tag "project[planning_user_id]", @project.planning_user_id, id: "planning-user-id" %>
-            <%= hidden_field_tag "project[design_user_id]", @project.design_user_id, id: "design-user-id" %>
-            <%= hidden_field_tag "project[development_user_id]", @project.development_user_id, id: "development-user-id" %>
-          </td>
-        </tr>
+        <% if current_user.admin? || current_user.planning? %>
+          <%= hidden_field_tag "project[planning_user_id]", @project.planning_user_id, id: "planning-user-id" %>
+        <% end %>
+        <% if current_user.admin? || current_user.design? %>
+          <%= hidden_field_tag "project[design_user_id]", @project.design_user_id, id: "design-user-id" %>
+        <% end %>
+        <% if current_user.admin? || current_user.development? %>
+          <%= hidden_field_tag "project[development_user_id]", @project.development_user_id, id: "development-user-id" %>
+        <% end %>
 
         <% if current_user.admin? || current_user.planning? %>
-          <tr><th>企画担当者</th><td id="planning-user-name"><%= @project.planning_user&.user_name || "未設定" %></td></tr>
+          <tr><th>企画部 社員ID</th>
+              <td><%= text_field_tag :employee_id_planning, @project.planning_user&.employee_id, class: "form-control", id: "employee-id-planning" %></td>
+          <tr><th>企画担当者</th><td id="planning-user-name"><%= @project.planning_user&.user_name.presence || "未設定" %></td></tr>
           <tr><th>企画開始日</th><td><%= form.date_field :planning_start_date, class: "form-control" %></td></tr>
           <tr><th>企画完了日</th><td><%= form.date_field :planning_end_date, class: "form-control" %></td></tr>
         <% end %>
 
         <% if current_user.admin? || current_user.design? %>
-          <tr><th>設計担当者</th><td id="design-user-name"><%= @project.design_user&.user_name || "未設定" %></td></tr>
+          <tr><th>設計部 社員ID</th>
+              <td><%= text_field_tag :employee_id_design, @project.design_user&.employee_id, class: "form-control", id: "employee-id-design" %></td>
+          <tr><th>設計担当者</th><td id="design-user-name"><%= @project.design_user&.user_name.presence || "未設定" %></td></tr>
           <tr><th>設計開始日</th><td><%= form.date_field :design_start_date, class: "form-control" %></td></tr>
           <tr><th>設計完了日</th><td><%= form.date_field :design_end_date, class: "form-control" %></td></tr>
         <% end %>
 
         <% if current_user.admin? || current_user.development? %>
-          <tr><th>開発担当者</th><td id="development-user-name"><%= @project.development_user&.user_name || "未設定" %></td></tr>
+          <tr><th>開発部 社員ID</th>
+              <td><%= text_field_tag :employee_id_development, @project.development_user&.employee_id, class: "form-control", id: "employee-id-development" %></td>
+          <tr><th>開発担当者</th><td id="development-user-name"><%= @project.development_user&.user_name.presence || "未設定" %></td></tr>
           <tr><th>開発開始日</th><td><%= form.date_field :development_start_date, class: "form-control" %></td></tr>
           <tr><th>開発完了日</th><td><%= form.date_field :development_end_date, class: "form-control" %></td></tr>
         <% end %>
 
-        <% if current_user.admin? %>
-          <tr><th>権限</th><td id="user-role-display">
-            <% if [@project.planning_user, @project.design_user, @project.development_user].compact.any?(&:admin?) %>
-              管理者
-            <% elsif [@project.planning_user, @project.design_user, @project.development_user].any? %>
-              一般社員
-            <% else %>
-              未設定
-            <% end %>
-          </td></tr>
-        <% end %>
-
-        <tr><th>状態</th><td><%= form.select :status, Project.statuses.keys.map { |status| [status.humanize, status] }, {}, class: "form-control" %></td></tr>
+        <tr><th>状態</th><td><%= form.select :status, Project.statuses.keys.map { |s| [s.humanize, s] }, {}, class: "form-control" %></td></tr>
       </tbody>
     </table>
   </div>
@@ -98,7 +84,56 @@
 <% end %>
 
 <script>
+function setupEmployeeInput(inputId, expectedDepartment, hiddenId, nameId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  input.addEventListener("change", () => {
+    const employeeId = input.value.trim();
+
+    if (!employeeId) {
+      const hidden = document.getElementById(hiddenId);
+      const nameCell = document.getElementById(nameId);
+      if (hidden) hidden.value = "";
+      if (nameCell) nameCell.textContent = "未設定";
+      return;
+    }
+
+    fetch(`/users/find_by_employee_id?employee_id=${employeeId}`)
+      .then(response => {
+        if (!response.ok) throw new Error("User not found");
+        return response.json();
+      })
+      .then(data => {
+        const departmentLabel = {
+          planning: "企画部",
+          design: "情報設計部",
+          development: "開発部"
+        };
+        if (expectedDepartment && data.department !== expectedDepartment) {
+          alert(`${departmentLabel[expectedDepartment]} に登録されている社員IDを入力してください。`);
+          input.value = "";
+          input.focus();
+          return;
+        }
+        document.getElementById(hiddenId).value = data.id;
+        document.getElementById(nameId).textContent = data.user_name || "未設定";
+      })
+      .catch(error => {
+        console.error("社員情報の取得に失敗:", error);
+        const hidden = document.getElementById(hiddenId);
+        const nameCell = document.getElementById(nameId);
+        if (hidden) hidden.value = "";
+        if (nameCell) nameCell.textContent = "未設定";
+      });
+  });
+}
+
 document.addEventListener("turbo:load", () => {
+  setupEmployeeInput("employee-id-planning", "planning", "planning-user-id", "planning-user-name");
+  setupEmployeeInput("employee-id-design", "design", "design-user-id", "design-user-name");
+  setupEmployeeInput("employee-id-development", "development", "development-user-id", "development-user-name");
+
   const revenue = document.getElementById("revenue");
   const cost = document.getElementById("cost");
   const profit = document.getElementById("profit");
