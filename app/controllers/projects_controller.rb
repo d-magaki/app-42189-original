@@ -32,20 +32,25 @@ class ProjectsController < ApplicationController
       end
     else
       users_scope = User.where(department: current_user.department, role: :employee)
-      dept_key = department_key(current_user.department)
 
       @employee_tasks = users_scope.each_with_object({}) do |user, hash|
+        next if user.user_name.to_s.strip.blank?
+
         count = @projects.count do |project|
-          assigned_user_id = project.send("#{dept_key}_user_id")
-          start_date = project.send("#{dept_key}_start_date")
-          end_date = project.send("#{dept_key}_end_date")
-          assigned_user_id == user.id && start_date.present? && end_date.nil?
+          should_show_in_list_for_user?(project, user, "all", require_own: true) # ✅ require_own: true に変更
         end
+
         hash[user] = count if count > 0
+      end
+
+      # 一般社員：部署内で一致する案件を上部リストに表示
+      @projects = @projects.select do |project|
+        users_scope.any? do |user|
+          user.user_name.to_s.strip.present? && should_show_in_list_for_user?(project, user, @filter)
+        end
       end
     end
   end
-
 
   def show; end
 

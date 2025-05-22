@@ -15,7 +15,17 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 mb-3">
-          <%= f.select :axis_field, [["社員名", "users.user_name"], ["部署", "users.department"], ["営業拠点", "sales_office"], ["顧客名", "customer_name"]], selected: @selected_axis, class: "form-select" %>
+          <%= f.select :axis_field, [
+                ["（選択なし：全体）", ""],
+                ["企画担当", "planning_user.user_name"],
+                ["設計担当", "design_user.user_name"],
+                ["開発担当", "development_user.user_name"],
+                ["営業担当", "sales_representative"],
+                ["営業拠点", "sales_office"],
+                ["顧客名", "customer_name"],
+                ["状態ステータス", "status"]
+              ], selected: @selected_axis, class: "form-select" %>
+
           <%= f.select :metric, [["売上", "revenue"], ["コスト", "cost"], ["利益", "profit"], ["件数", "count"]], selected: @selected_metric, class: "form-select" %>
           <%= f.select :chart_type, [["棒グラフ", "bar"], ["円グラフ", "pie"], ["折れ線", "line"]], selected: @selected_chart_type, class: "form-select" %>
           <%= f.submit "更新", class: "btn btn-primary" %>
@@ -107,7 +117,7 @@
   <!-- 平均処理必要数 -->
   <div class="col-md-6">
     <div class="bg-white p-3 shadow rounded h-100 w-100">
-      <h2 class="h5 mb-3">1日あたりの平均処理必要数</h2>
+      <h2 class="h5 mb-3">1日あたりの平均処理数</h2>
       <%= form_with url: analytics_path, method: :get, local: true do |f| %>
         <div class="d-flex align-items-center gap-2 mb-3">
           <label class="mb-0">期間:</label>
