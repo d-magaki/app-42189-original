@@ -1,7 +1,7 @@
 puts "✅ シードデータ登録開始..."
 
-User.destroy_all
 Project.destroy_all
+User.destroy_all
 
 # 管理者
 admin = User.create!(
