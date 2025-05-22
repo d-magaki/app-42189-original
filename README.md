@@ -34,12 +34,15 @@ ProgressHub は、複数部署の進捗・実績・担当情報を一元管理�
 
 ## テスト用アカウント
 
-| ロール           | メールアドレス             | パスワード     |
-|------------------|-----------------------------|----------------|
-| 管理者ユーザー   | `admin@example.com`         | `password123`  |
-| 企画担当         | `planner@example.com`       | `password123`  |
-| 設計担当         | `designer@example.com`      | `password123`  |
-| 開発担当         | `developer@example.com`     | `password123`  |
+| ロール           | メールアドレス               | パスワード     |
+|------------------|-------------------------------|----------------|
+| 管理者ユーザー   | `admin@example.com`           | `password123`  |
+| 企画担当         | `planner1@example.com`        | `password123`  |
+| 設計担当         | `designer1@example.com`       | `password123`  |
+| 開発担当         | `developer1@example.com`      | `password123`  |
+
+※ 各部署にユーザーが3名ずつ登録されています  
+（例：`planner2@example.com`, `designer3@example.com` など）
 
 ---
 
@@ -52,29 +55,44 @@ ProgressHub は、複数部署の進捗・実績・担当情報を一元管理�
 4. 案件の一覧・詳細・編集（部署ごとに表示制御、削除は管理者のみ）  
 5. 分析ページにて、案件の進行状況や依頼区分の割合などをグラフ表示（管理者のみ）
 
+## アプリ説明
+- [📄 ProgressHubの説明を見る（PDF）](./public/ProgressHubの説明.pdf)
+
+## テスト用インポートデータ
+案件を一括登録するためのサンプルExcelファイルを同梱しています。  
+- [📥 Excelマクロファイルをダウンロード](./public/sample_projects.xlsm)
+
+1. Excel のマクロを有効にする  
+2. 「リスト作成」ボタンで行数を指定して案件を自動生成  
+3. Excelファイルを保存する  
+4. アプリ内の「案件一覧」画面下部でファイルをアップロードし「Data Import」ボタンを押す
+
+※リスト作成を間違った場合は削除ボタンでやり直してください  
+※一部未入力カラム（企画IDなど）はマッピング用のため無視してOKです
+
 ---
 
 ## 実装した機能の画像やGIF
 
-| 機能名                | 画像ファイル例 (クリックで表示)                                                     |
-|------------------------|--------------------------------------------------------------------------------------|
-| ログイン画面           | [![login](./screenshots/login.png)](./screenshots/login.png)                       |
-| トップページ           | [![home](./screenshots/home.png)](./screenshots/home.png)                          |
-| ユーザー一覧           | [![users](./screenshots/users.png)](./screenshots/users.png)                       |
-| 案件一覧（部署別UI）   | [![projects](./screenshots/projects.png)](./screenshots/projects.png)              |
-| 分析画面（チャート表示）| [![analytics](./screenshots/analytics_index.png)](./screenshots/analytics_index.)   |
+| 機能名                | 画像ファイル例 (クリックで表示)                                                         |
+|-----------------------|--------------------------------------------------------------------------------------|
+| ログイン画面           | [![login](./screenshots/login.png)](./screenshots/login.png)                         |
+| トップページ           | [![home](./screenshots/home.png)](./screenshots/home.png)                            |
+| ユーザー一覧           | [![users](./screenshots/users_index.png)](./screenshots/users_index.png)             |
+| 案件一覧（部署別UI）   | [![projects](./screenshots/projects.png)](./screenshots/projects.png)                 |
+| 分析画面（チャート表示）| [![analytics](./screenshots/analytics_index.png)](./screenshots/analytics_index.png) |
 
 ---
 
 ## 画面遷移図
 
-![画面遷移図](./画面遷移図20250513.png)
+![画面遷移図](./public/画面遷移図20250513.png)
 
 ---
 
 ## ER図
 
-![ER図](./ER図20250513.png)
+![ER図](./public/ER図20250513.png)
 
 ---
 
@@ -102,19 +120,18 @@ ProgressHub は、複数部署の進捗・実績・担当情報を一元管理�
 
 ---
 
-## テスト用インポートデータ
+## 本番環境への注意
 
-案件を一括登録するためのサンプルExcelファイルを同梱しています。  
-ファイルパス：`./sample_projects.xlsm`
+### ⚠️ `rails db:seed` の扱いについて
 
-上記ファイルの利用について
-1　マクロを有効にする
-2　リスト作成ボタンを押下し好きな行数のデータを作成
-3　Excelデータを保存する
-4　案件一覧画面にファイルを読み込み「Date Import」ボタンを押下
+Render の `render-build.sh` に `rails db:seed` を記述したままデプロイすると、  
+**本番データが毎回削除される危険性があります**。
 
-※リスト作成を間違った場合は削除ボタンを押下してやり直してください。
-　企画IDなどの入力されないカラムがありますがマッピングのためなのでそのままご利用ください。
+```bash
+# render-build.sh（初回だけ seed を実行し、その後は削除 or コメントアウト）
+bundle exec rails db:migrate
+# bundle exec rails db:seed ← ⚠️ 初回以外は削除またはコメントアウト！
+```
 
 ---
 

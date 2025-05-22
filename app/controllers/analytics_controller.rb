@@ -24,26 +24,45 @@ class AnalyticsController < ApplicationController
     @form_params[:average_to]   ||= today + 1.month
 
     # ▼ カスタムグラフ用設定
-    @selected_axis = params[:axis_field] || "users.user_name"
+    @selected_axis = params[:axis_field] || "user.user_name"
     @selected_metric = params[:metric] || "revenue"
     @selected_chart_type = params[:chart_type] || "bar"
 
-    if @selected_metric == "count"
-      raw_data = Project
-        .joins(:user)
-        .where(created_at: @form_params[:sales_from].beginning_of_day..@form_params[:sales_to].end_of_day)
-        .group(@selected_axis)
-        .count
-    else
-      raw_data = Project
-        .joins(:user)
-        .where(created_at: @form_params[:sales_from].beginning_of_day..@form_params[:sales_to].end_of_day)
-        .group(@selected_axis)
-        .sum(@selected_metric)
-    end
+    # ▼ カスタムグラフデータ集計
+    projects = Project.where(created_at: @form_params[:sales_from].beginning_of_day..@form_params[:sales_to].end_of_day)
 
-    # 件数が多い順に30件に絞って表示
-    @custom_data = raw_data.sort_by { |_, v| -v }.first(30).to_h
+    if @selected_axis.blank? && @selected_chart_type == "line"
+      # ▼ 折れ線グラフ + X軸なし → 日別推移
+      raw_data = if @selected_metric == "count"
+        projects.group("DATE(created_at)").count
+      else
+        projects.group("DATE(created_at)").sum(@selected_metric)
+      end
+      @custom_data = raw_data.sort.to_h
+    elsif @selected_axis.blank?
+      # ▼ X軸なし（棒グラフ・円グラフ）→ 全体集計
+      total = @selected_metric == "count" ? projects.count : projects.sum(@selected_metric)
+      @custom_data = { "全体" => total }
+    else
+      # ▼ X軸指定あり
+      case @selected_axis
+      when "planning_user.user_name"
+        projects = projects.joins(:planning_user).group("users.user_name")
+      when "design_user.user_name"
+        projects = projects.joins(:design_user).group("users.user_name")
+      when "development_user.user_name"
+        projects = projects.joins(:development_user).group("users.user_name")
+      when "user.user_name"
+        projects = projects.joins(:user).group("users.user_name")
+      when "sales_representative", "sales_office", "customer_name", "status"
+        projects = projects.group(@selected_axis)
+      else
+        projects = projects.group(@selected_axis)
+      end
+
+      raw_data = @selected_metric == "count" ? projects.count : projects.sum(@selected_metric)
+      @custom_data = raw_data.sort_by { |_, v| -v }.first(30).to_h
+    end
 
     # nil対策（未設定）
     @custom_labels = @custom_data.keys.map { |k| k.presence || "未設定" }

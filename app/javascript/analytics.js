@@ -46,7 +46,7 @@ document.addEventListener("turbo:load", () => {
         });
       }
 
-      // 依頼種別割合
+      // 依頼種別割合（円グラフ）
       const requestChart = document.getElementById("requestTypeChart");
       if (requestChart && !requestChart.dataset.loaded) {
         requestChart.dataset.loaded = "true";
@@ -67,7 +67,7 @@ document.addEventListener("turbo:load", () => {
         });
       }
 
-      // 納期までの案件数（横棒）
+      // 納期までの案件数（横棒グラフ）
       const deliveryChart = document.getElementById("deliveryTimelineChart");
       if (deliveryChart && !deliveryChart.dataset.loaded) {
         deliveryChart.dataset.loaded = "true";
@@ -111,28 +111,45 @@ document.addEventListener("turbo:load", () => {
         const chartType = customChart.dataset.type || "bar";
         const labels = getJSON("custom-chart-labels");
         const values = getJSON("custom-chart-values");
+        const metric = new URLSearchParams(window.location.search).get("metric");
+
+        // Y軸調整
+        let yScale = { beginAtZero: true };
+
+        if (metric === "count") {
+          yScale.max = 50;
+          yScale.ticks = { stepSize: 1 };
+        } else {
+          const maxValue = Math.max(...values);
+          yScale.max = Math.ceil(maxValue * 1.2); // 20%余裕
+          yScale.ticks = { stepSize: Math.ceil(maxValue * 0.1) || 1 };
+        }
+
+        const options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: chartType !== "bar" } },
+          scales: chartType === "pie" ? {} : {
+            y: yScale,
+            x: {
+              ticks: { font: { size: 12 } }
+            }
+          }
+        };
 
         new Chart(customChart.getContext("2d"), {
           type: chartType,
           data: {
-            labels: labels,
+            labels: labels.length > 0 ? labels : ["全体"],
             datasets: [{
               label: "データ",
-              data: values,
+              data: values.length > 0 ? values : [0],
               backgroundColor: chartType === "pie" ? [
                 "#FF6384", "#36A2EB", "#FFCE56", "#4CAF50", "#9C27B0", "#FF9800"
               ] : "#4CAF50"
             }]
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: true } },
-            scales: chartType === "pie" ? {} : {
-              y: { beginAtZero: true },
-              x: { ticks: { font: { size: 12 } } }
-            }
-          }
+          options: options
         });
       }
     });
