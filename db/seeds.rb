@@ -55,114 +55,42 @@ puts "✅ ユーザー作成完了"
 
 # 各工程ごとの案件を生成
 3.times do |i|
-  # 企画未着手
-  Project.create!(
-    customer_name: "企画未着手案件#{i + 1}",
-    sales_office: "宮城",
-    sales_representative: "営業#{i + 1}郎",
-    request_type: :新規依頼,
-    request_content: :WEBアプリ制作,
-    order_date: Date.today - 10,
-    due_date: Date.today + 20,
-    status: :未着手,
-    planning_user: nil,
-    user: admin
-  )
+  6.times do |j|
+    revenue = rand(600_000..1_200_000)
+    cost = rand(300_000..800_000)
+    profit = revenue - cost
 
-  # 企画進行中
-  Project.create!(
-    customer_name: "企画進行中案件#{i + 1}",
-    sales_office: "東京",
-    sales_representative: "営業#{i + 4}郎",
-    request_type: :修正依頼,
-    request_content: :WEBデザイン制作,
-    order_date: Date.today - 15,
-    due_date: Date.today + 10,
-    status: :進行中,
-    planning_user: planner_users[i],
-    planning_start_date: Date.today - 5,
-    user: admin
-  )
-
-  # 設計未着手
-  Project.create!(
-    customer_name: "設計未着手案件#{i + 1}",
-    sales_office: "大阪",
-    sales_representative: "営業#{i + 7}郎",
-    request_type: :バグ修正,
-    request_content: :システム構築,
-    order_date: Date.today - 20,
-    due_date: Date.today + 5,
-    status: :未着手,
-    planning_user: planner_users[i],
-    planning_start_date: Date.today - 10,
-    planning_end_date: Date.today - 5,
-    design_user: nil,
-    user: admin
-  )
-
-  # 設計進行中
-  Project.create!(
-    customer_name: "設計進行中案件#{i + 1}",
-    sales_office: "名古屋",
-    sales_representative: "営業#{i + 10}郎",
-    request_type: :追加依頼,
-    request_content: :データ解析,
-    order_date: Date.today - 30,
-    due_date: Date.today + 7,
-    status: :進行中,
-    planning_user: planner_users[i],
-    planning_start_date: Date.today - 20,
-    planning_end_date: Date.today - 15,
-    design_user: designer_users[i],
-    design_start_date: Date.today - 10,
-    user: admin
-  )
-
-  # 開発未着手
-  Project.create!(
-    customer_name: "開発未着手案件#{i + 1}",
-    sales_office: "福岡",
-    sales_representative: "営業#{i + 13}郎",
-    request_type: :新規依頼,
-    request_content: :スマホアプリ制作,
-    order_date: Date.today - 25,
-    due_date: Date.today + 14,
-    status: :未着手,
-    planning_user: planner_users[i],
-    planning_start_date: Date.today - 20,
-    planning_end_date: Date.today - 15,
-    design_user: designer_users[i],
-    design_start_date: Date.today - 14,
-    design_end_date: Date.today - 10,
-    development_user: nil,
-    user: admin
-  )
-
-  # 開発進行中
-  Project.create!(
-    customer_name: "開発進行中案件#{i + 1}",
-    sales_office: "札幌",
-    sales_representative: "営業#{i + 16}郎",
-    request_type: :その他＿依頼,
-    request_content: :その他＿内容,
-    order_date: Date.today - 40,
-    due_date: Date.today + 3,
-    status: :進行中,
-    planning_user: planner_users[i],
-    planning_start_date: Date.today - 30,
-    planning_end_date: Date.today - 25,
-    design_user: designer_users[i],
-    design_start_date: Date.today - 24,
-    design_end_date: Date.today - 20,
-    development_user: developer_users[i],
-    development_start_date: Date.today - 5,
-    user: admin
-  )
+    Project.create!(
+      customer_name: %w[企画未着手案件 企画進行中案件 設計未着手案件 設計進行中案件 開発未着手案件 開発進行中案件][j] + "#{i + 1}",
+      sales_office: %w[宮城 東京 大阪 名古屋 福岡 札建][j],
+      sales_representative: "営業#{i + j + 1}郎",
+      request_type: Project.request_types.keys[j % Project.request_types.keys.size],
+      request_content: Project.request_contents.keys[j % Project.request_contents.keys.size],
+      order_date: Date.today - rand(10..40),
+      due_date: Date.today + rand(3..20),
+      status: j.even? ? :未着手 : :進行中,
+      planning_user: j >= 2 ? planner_users[i % 3] : nil,
+      planning_start_date: j >= 1 ? Date.today - rand(20..30) : nil,
+      planning_end_date: j >= 3 ? Date.today - rand(15..20) : nil,
+      design_user: j >= 3 ? designer_users[i % 3] : nil,
+      design_start_date: j >= 3 ? Date.today - rand(14..24) : nil,
+      design_end_date: j >= 4 ? Date.today - rand(10..20) : nil,
+      development_user: j == 5 ? developer_users[i % 3] : nil,
+      development_start_date: j == 5 ? Date.today - rand(3..10) : nil,
+      revenue: revenue,
+      cost: cost,
+      profit: profit,
+      user: admin
+    )
+  end
 end
 
-# 完了済み案件を数件追加
+# 完了済み案件
 3.times do |i|
+  revenue = rand(1_000_000..1_500_000)
+  cost = rand(700_000..1_100_000)
+  profit = revenue - cost
+
   Project.create!(
     customer_name: "完了済み案件#{i + 1}",
     sales_office: "渋谷",
@@ -181,6 +109,9 @@ end
     development_user: developer_users[i % 3],
     development_start_date: Date.today - 39,
     development_end_date: Date.today - 30,
+    revenue: revenue,
+    cost: cost,
+    profit: profit,
     user: admin
   )
 end
