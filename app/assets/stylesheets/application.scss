@@ -1,7 +1,7 @@
 @import "bootstrap";
 
 /* ===============================
-    全体レイアウト共通
+  全体レイアウト共通
 =============================== */
 body {
   background-color: #f8f9fa;
@@ -9,7 +9,55 @@ body {
 }
 
 /* ===============================
-    ログイン画面：縦にコンパクト化
+  共通ページコンテンツWrapper
+=============================== */
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+  ナビゲーションバー：モバイル対応強化
+=============================== */
+header.navbar {
+  flex-wrap: wrap;
+  word-break: break-word;
+  align-items: center;
+
+  .logged-in-user {
+    white-space: nowrap;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .btn {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  header.navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    .logged-in-user {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+    }
+  }
+}
+
+/* ===============================
+  ログイン画面：縦にコンパクト化
 =============================== */
 .login-page-wrapper {
   position: absolute;
@@ -20,15 +68,17 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 24px;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
-
-
 
 .login-logo {
   text-align: center;
 
   img {
-    max-width: 500px; /* ここでロゴを変更 */
+    max-width: 500px;
+    width: 100%;
     height: auto;
     margin-top: auto;
   }
@@ -40,14 +90,12 @@ body {
   background-color: #ffffff;
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-
 /* ===============================
-   トップページ ロゴ
+  トップページ ロゴ
 =============================== */
-
 .top-wrapper {
   display: flex;
   flex-direction: column;
@@ -94,7 +142,7 @@ body {
 }
 
 /* ===============================
-   📌 共通テーブルスタイル（一覧・詳細・編集共通）
+  共通テーブルスタイル（一覧・詳細・編集共通）
 =============================== */
 #projects-table {
   width: 100%;
@@ -130,7 +178,7 @@ body {
 }
 
 /* ===============================
-   📋 ユーザー一覧・他テーブルレイアウト
+  ユーザー一覧・他テーブルレイアウト
 =============================== */
 .user-list-wrapper {
   max-width: 1200px;
@@ -161,13 +209,25 @@ body {
 }
 
 /* ===============================
-   📄 詳細・編集 共通テーブル構造
+  詳細・編集 共通テーブル構造
 =============================== */
 .table-responsive {
   overflow-x: auto;
   white-space: nowrap;
   width: 100%;
   min-width: 1000px;
+}
+
+.table-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.project-detail-wrapper .table-responsive #projects-table {
+  min-width: unset;
+  width: 100%;
+  table-layout: auto;
 }
 
 .table-header th {
@@ -177,7 +237,7 @@ body {
 }
 
 /* ===============================
-   📊 Chart.js グラフ
+  Chart.js グラフ
 =============================== */
 .chart-container-wrapper {
   display: flex;
@@ -192,7 +252,7 @@ body {
   background-color: #fff;
   border: 1px solid #ddd;
   padding: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   height: 360px;
   position: relative;
@@ -207,7 +267,7 @@ body {
 }
 
 /* ===============================
-   ✅ ボタン共通
+  ボタン共通
 =============================== */
 .actions {
   display: flex;
@@ -225,8 +285,149 @@ body {
 }
 
 /* ===============================
-   ✅ 一覧フィルター：非表示行
+  一覧フィルター：非表示行
 =============================== */
 #projects-table tr.filtered-out {
   display: none !important;
+}
+
+/* ===============================
+  モバイル対応（レスポンシブ）
+=============================== */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .login-form-container,
+  .top-wrapper,
+  .chart-container-wrapper,
+  .user-list-wrapper {
+    padding: 16px;
+    width: 100%;
+  }
+
+  .login-logo img,
+  .top-page-logo img {
+    max-width: 90%;
+  }
+
+  .top-page-title {
+    font-size: 28px;
+  }
+
+  .top-page-user-info,
+  .top-page-nav a {
+    font-size: 16px;
+  }
+
+  .top-page-nav {
+    gap: 12px;
+  }
+
+  // ✅ 一覧も詳細も共通で強制的にレスポンシブになるようにする
+  #projects-table {
+    font-size: 13px;
+    min-width: unset !important;
+    width: 100% !important;
+    border-collapse: collapse;
+
+    thead {
+      display: none !important;
+    }
+
+    tbody, tr, td {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    tr {
+      margin-bottom: 15px;
+      border-bottom: 2px solid #ccc;
+    }
+
+    td {
+      text-align: right;
+      position: relative;
+      padding-left: 50%;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      background-color: #fff;
+    }
+
+    td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      font-weight: bold;
+      text-align: left;
+      white-space: nowrap;
+      color: #333;
+    }
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      font-size: 16px;
+      height: 44px;
+      min-width: unset;
+    }
+  }
+
+  .chart-container {
+    height: 300px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .project-detail-wrapper #projects-table {
+    font-size: 13px;
+    min-width: unset !important;
+    width: 100% !important;
+    border-collapse: collapse;
+
+    thead {
+      display: none !important;
+    }
+
+    tbody, tr, td {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    tr {
+      margin-bottom: 15px;
+      border-bottom: 2px solid #ccc;
+    }
+
+    td {
+      text-align: right;
+      position: relative;
+      padding-left: 50%;
+      border: 1px solid #ccc;
+      background-color: #fff;
+    }
+
+    td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      font-weight: bold;
+      text-align: left;
+      white-space: nowrap;
+      color: #333;
+    }
+  }
 }

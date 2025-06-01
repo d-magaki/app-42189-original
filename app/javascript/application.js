@@ -18,13 +18,18 @@ document.addEventListener("turbo:load", () => {
     });
   }
 
+  // モバイル対応：クリックで詳細ページへ遷移
   document.querySelectorAll("#projects-table tbody tr").forEach((row) => {
-    row.addEventListener("dblclick", () => {
+    row.addEventListener("click", (event) => {
+      // チェックボックス、リンク、ボタンを除外
+      if (event.target.closest("input, a, button")) return;
+
       const url = row.dataset.url;
       if (url) window.location.href = url;
     });
   });
 
+  // 一括選択チェックボックス
   const selectAll = document.getElementById("select-all");
   if (selectAll) {
     selectAll.addEventListener("change", () => {
@@ -34,6 +39,7 @@ document.addEventListener("turbo:load", () => {
     });
   }
 
+  // 社員ID入力で担当者自動設定
   function setupEmployeeInput(inputId, expectedDepartment, hiddenId, nameId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -81,6 +87,7 @@ document.addEventListener("turbo:load", () => {
   setupEmployeeInput("employee-id-design", "design", "design-user-id", "design-user-name");
   setupEmployeeInput("employee-id-development", "development", "development-user-id", "development-user-name");
 
+  // 下部表からのフィルター行クリック
   document.querySelectorAll(".employee-filter-row").forEach((row) => {
     row.addEventListener("click", () => {
       const userName = row.dataset.userName;
@@ -92,6 +99,7 @@ document.addEventListener("turbo:load", () => {
     });
   });
 
+  // フィルター解除
   const resetButton = document.getElementById("reset-projects");
   if (resetButton) {
     resetButton.addEventListener("click", () => {
@@ -101,6 +109,7 @@ document.addEventListener("turbo:load", () => {
     });
   }
 
+  // 編集フォーム送信前に空欄チェック
   const editForm = document.querySelector("form.edit-form");
   if (editForm) {
     editForm.addEventListener("submit", () => {
@@ -109,6 +118,19 @@ document.addEventListener("turbo:load", () => {
         const hiddenInput = document.getElementById(`${key}-user-id`);
         if (employeeInput && hiddenInput && employeeInput.value.trim() === "") {
           hiddenInput.value = "";
+        }
+      });
+    });
+  }
+
+  // モバイル対応：data-labelを自動で付与
+  const table = document.querySelector("#projects-table");
+  if (table) {
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+    table.querySelectorAll("tbody tr").forEach(row => {
+      row.querySelectorAll("td").forEach((td, i) => {
+        if (!td.hasAttribute("data-label") && headers[i]) {
+          td.setAttribute("data-label", headers[i]);
         }
       });
     });
