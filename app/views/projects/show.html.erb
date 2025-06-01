@@ -1,7 +1,7 @@
-<h1 class="page-title">案件詳細</h1>
+<div class="content-wrapper project-detail-wrapper">
+  <h1 class="page-title">案件詳細</h1>
 
-<div class="list-container">
-  <div class="table-responsive">
+  <div class="table-responsive mt-4">
     <table id="projects-table" class="table table-bordered table-striped">
       <thead class="table-header">
         <tr>
@@ -10,25 +10,25 @@
         </tr>
       </thead>
       <tbody>
-        <tr><th>顧客名</th><td><%= @project.customer_name %></td></tr>
-        <tr><th>営業拠点</th><td><%= @project.sales_office %></td></tr>
-        <tr><th>営業担当</th><td><%= @project.sales_representative %></td></tr>
-        <tr><th>依頼種別</th><td><%= @project.request_type %></td></tr>
-        <tr><th>依頼内容</th><td><%= @project.request_content %></td></tr>
-        <tr><th>受注日</th><td><%= @project.order_date %></td></tr>
-        <tr><th>納期</th><td><%= @project.due_date %></td></tr>
+        <tr><th>顧客名</th><td data-label="顧客名"><%= @project.customer_name %></td></tr>
+        <tr><th>営業拠点</th><td data-label="営業拠点"><%= @project.sales_office %></td></tr>
+        <tr><th>営業担当</th><td data-label="営業担当"><%= @project.sales_representative %></td></tr>
+        <tr><th>依頼種別</th><td data-label="依頼種別"><%= @project.request_type %></td></tr>
+        <tr><th>依頼内容</th><td data-label="依頼内容"><%= @project.request_content %></td></tr>
+        <tr><th>受注日</th><td data-label="受注日"><%= @project.order_date %></td></tr>
+        <tr><th>納期</th><td data-label="納期"><%= @project.due_date %></td></tr>
 
         <% if current_user.admin? %>
-          <tr><th>売上</th><td><%= number_with_delimiter(@project.revenue) %> 円</td></tr>
-          <tr><th>コスト</th><td><%= number_with_delimiter(@project.cost) %> 円</td></tr>
-          <tr><th>利益</th><td><%= number_with_delimiter(@project.profit) %> 円</td></tr>
+          <tr><th>売上</th><td data-label="売上"><%= @project.revenue.present? ? "#{number_with_delimiter(@project.revenue)} 円" : "未設定" %></td></tr>
+          <tr><th>コスト</th><td data-label="コスト"><%= @project.cost.present? ? "#{number_with_delimiter(@project.cost)} 円" : "未設定" %></td></tr>
+          <tr><th>利益</th><td data-label="利益"><%= @project.profit.present? ? "#{number_with_delimiter(@project.profit)} 円" : "未設定" %></td></tr>
         <% end %>
 
-        <tr><th>備考</th><td><%= @project.remarks.presence || "なし" %></td></tr>
+        <tr><th>備考</th><td data-label="備考"><%= @project.remarks.presence || "なし" %></td></tr>
 
         <tr>
           <th>添付資料</th>
-          <td>
+          <td data-label="添付資料">
             <% if @project.attachments.attached? %>
               <% @project.attachments.each do |attachment| %>
                 <%= link_to attachment.filename.to_s, rails_blob_path(attachment, disposition: "inline"), target: "_blank" %><br>
@@ -40,29 +40,29 @@
         </tr>
 
         <% if current_user.admin? || current_user.planning? %>
-          <tr><th>企画担当者</th><td><%= @project.planning_user&.user_name || "未設定" %></td></tr>
-          <tr><th>企画開始日</th><td><%= @project.planning_start_date %></td></tr>
-          <tr><th>企画完了日</th><td><%= @project.planning_end_date %></td></tr>
+          <tr><th>企画担当者</th><td data-label="企画担当者"><%= @project.planning_user&.user_name || "未設定" %></td></tr>
+          <tr><th>企画開始日</th><td data-label="企画開始日"><%= @project.planning_start_date %></td></tr>
+          <tr><th>企画完了日</th><td data-label="企画完了日"><%= @project.planning_end_date %></td></tr>
         <% end %>
 
         <% if current_user.admin? || current_user.design? %>
-          <tr><th>設計担当者</th><td><%= @project.design_user&.user_name || "未設定" %></td></tr>
-          <tr><th>設計開始日</th><td><%= @project.design_start_date %></td></tr>
-          <tr><th>設計完了日</th><td><%= @project.design_end_date %></td></tr>
+          <tr><th>設計担当者</th><td data-label="設計担当者"><%= @project.design_user&.user_name || "未設定" %></td></tr>
+          <tr><th>設計開始日</th><td data-label="設計開始日"><%= @project.design_start_date %></td></tr>
+          <tr><th>設計完了日</th><td data-label="設計完了日"><%= @project.design_end_date %></td></tr>
         <% end %>
 
         <% if current_user.admin? || current_user.development? %>
-          <tr><th>開発担当者</th><td><%= @project.development_user&.user_name || "未設定" %></td></tr>
-          <tr><th>開発開始日</th><td><%= @project.development_start_date %></td></tr>
-          <tr><th>開発完了日</th><td><%= @project.development_end_date %></td></tr>
+          <tr><th>開発担当者</th><td data-label="開発担当者"><%= @project.development_user&.user_name || "未設定" %></td></tr>
+          <tr><th>開発開始日</th><td data-label="開発開始日"><%= @project.development_start_date %></td></tr>
+          <tr><th>開発完了日</th><td data-label="開発完了日"><%= @project.development_end_date %></td></tr>
         <% end %>
 
         <% if current_user.admin? %>
           <tr><th>権限</th>
-            <td>
-              <% if @project.planning_user&.admin? || @project.design_user&.admin? || @project.development_user&.admin? %>
+            <td data-label="権限">
+              <% if [@project.planning_user, @project.design_user, @project.development_user].any? { |u| u&.admin? } %>
                 管理者
-              <% elsif @project.planning_user || @project.design_user || @project.development_user %>
+              <% elsif [@project.planning_user, @project.design_user, @project.development_user].any? %>
                 一般社員
               <% else %>
                 未設定
@@ -71,18 +71,16 @@
           </tr>
         <% end %>
 
-        <tr><th>状態</th><td><%= @project.status %></td></tr>
+        <tr><th>状態</th><td data-label="状態"><%= @project.status %></td></tr>
       </tbody>
     </table>
   </div>
-</div>
 
-<div class="actions">
-  <%= link_to "編集する", edit_project_path(@project), class: "btn btn-primary btn-lg" %>
-
-  <% if current_user.admin? %>
-    <%= button_to "削除", project_path(@project), method: :delete, data: { confirm: "本当に削除しますか？", turbo: false }, class: "btn btn-danger btn-lg" %>
-  <% end %>
-
-  <%= link_to "一覧に戻る", projects_path, class: "btn btn-secondary btn-lg" %>
+  <div class="actions mt-4">
+    <%= link_to "編集する", edit_project_path(@project), class: "btn btn-primary btn-lg" %>
+    <% if current_user.admin? %>
+      <%= button_to "削除", project_path(@project), method: :delete, data: { confirm: "本当に削除しますか？", turbo: false }, class: "btn btn-danger btn-lg" %>
+    <% end %>
+    <%= link_to "一覧に戻る", projects_path, class: "btn btn-secondary btn-lg" %>
+  </div>
 </div>
